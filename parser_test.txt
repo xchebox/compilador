@@ -1,0 +1,28 @@
+program yolo;
+int c;
+
+function int myfunction(){
+c = 12;
+c[1] = 4;
+return 0;
+}
+
+
+function string b(double s){
+double m;
+return c;
+}
+
+function int zqwwex(){
+return c;
+}
+
+main{
+int a;
+c = myfunction(3, b(a));
+z = 12;
+#klasmklsadmkdsamklmkl
+z = 1;
+}
+
+end;

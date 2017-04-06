@@ -1,0 +1,194 @@
+/*reserved words*/
+PROGRAM             ::= 'program'
+MAIN                ::= 'main'
+END                 ::= 'end'
+FUNCTION            ::= 'function'
+RETURN              ::= 'return'
+IF                  ::= 'if'
+ELSE                ::= 'else'
+WHILE               ::= 'while'
+DO                  ::= 'do'
+INT                 ::= 'int'
+DOUBLE              ::= 'double'
+BOOLEAN             ::= 'boolean'
+PENUP               ::= 'penUp'
+PENDOWN             ::= 'penDown'
+PENCOLOR            ::= 'penColor'
+PENSIZE             ::= 'penSize'
+SETX                ::= 'setX'
+SETY                ::= 'setY'
+CLEAR               ::= 'clear'
+MOVEONX             ::= 'moveOnX'
+MOVEONY             ::= 'moveOnY'
+ROTATETORIGHT       ::= 'rotateToRight'
+ROTATETOLEFT        ::= 'rotateToLeft'
+RECTANGLE           ::= 'rectangle'
+TRIANGLE            ::= 'triangle'
+CIRCLE              ::= 'circle'
+
+
+/*tokens*/
+PLUS              ::= "+"
+MINUS             ::= "-"
+MULT              ::= "*"
+DIVIDE            ::= "/"
+LPAREN            ::= "("
+RPAREN            ::= ")"
+LBRACE            ::= "{"
+RBRACE            ::= "}"
+LBRACKET          ::= "["
+RBRACKET          ::= "]"
+EQUALS            ::= "=="
+ASSIGN            ::= "="
+LESS              ::= "<"
+GREATER           ::= ">"
+SEMICOLON         ::= ";"
+COMMA             ::= ","
+AND               ::= "&"
+OR                ::= "|"
+CONST_INT         ::= "C_INT"
+CONST_DOUBLE      ::= "C_DOU"
+CONST_BOOLEAN     ::= "C_BOO"
+COMMENT           ::= "COMMENT"
+ID                ::= "ID"
+
+
+/* program */
+p_program               ::= PROGRAM ID SEMICOLON  global_declaration function_declaration main END SEMICOLON
+global_declaration      ::= declaration_statute  mult_declaration
+
+
+mult_declaration        ::= global_declaration
+                            | empty
+
+/*main*/
+main                    ::= MAIN LBRACE statute RBRACE
+
+/* types declaration*/
+int_declaration         ::= ID array int_assignation
+int_assignation         ::= (ASSIGN expression) |
+                            empty
+double_declaration      ::= ID array double_assignation
+double_assignation      ::= (ASSIGN expression) |
+                            empty
+boolean_declaration     ::= ID array boolean_assignation
+boolean_assignation     ::= (ASSIGN expression) |
+                            empty
+
+
+/* expression */
+expression              ::= logical
+logical                 ::= relational logical_main
+logical_main            ::= (AND logical) |
+                            (OR logical) |
+                            empty
+relational              ::= sum relational_main
+relational_main         ::= (EQUALS relational) |
+                            (LESS relational) |
+                            (GREATER relational) |
+                            empty
+sum                     ::= mult sum_main
+sum_main                ::= (PLUS sum) |
+                            (MINUS sum) |
+                            empty
+mult                    ::= term mult_main
+mult_main               ::= (MULT mult) |
+                            (DIVIDE mult) |
+                            empty
+term                    ::= (CONST_INT) |
+                            (CONST_DOUBLE) |
+                            (CONST_BOOLEAN) |
+                            (ID function) |
+                            (LPAREN expression RPAREN)
+
+/* function & array */
+/* use */
+function                ::= (LPAREN params RPAREN) |
+                            array_u
+function_declaration    ::= function_header function_main
+function_header         ::= FUNCTION type ID LPAREN params_declaration RPAREN
+params_declaration      ::= param_declaration
+param_declaration       ::= type ID mult_params_declaration
+mult_params_declaration ::= (COMMA param_declaration) |
+                            empty
+function_main           ::= LBRACE  statute return_statute RBRACE function_declaration
+array                   ::= (LBRACKET CONST_INT RBRACKET array_mult) |
+                            empty
+array_mult              ::= array
+array_u                 ::= (LBRACKET expression RBRACKET array_mult_u) |
+                            empty
+array_mult_u            ::= array_u
+
+
+/* statutes */
+statute                 ::= (if_statute statute) |
+                            (while_statute statute) |
+                            (do_while_statute statute) |
+                            (assignation_statute statute) |
+                            (declaration_statute statute) |
+                            (function_statute statute) |
+                            (comment_statute statute) |
+                            (graphic_statute statute) |
+                            empty
+
+/* if */
+if_statute              ::= IF LPAREN expression RPAREN LBRACE statute RBRACE else
+else                    ::= (ELSE LBRACE statute RBRACE) |
+                            empty
+
+/*function*/
+function_statute        ::= ID LPAREN params RPAREN SEMICOLON
+
+/* while */
+while_statute           ::= WHILE LPAREN expression RPAREN LBRACE statute RBRACE
+
+/* do while */
+do_while_statute        ::= DO LBRACE statute RBRACE WHILE LPAREN expression RPAREN
+
+/*assignation*/
+/*assignation_statute   ::= ID array ASSIGN possible_values SEMICOLON*/
+assignation_statute     ::= ID array_u ASSIGN expression SEMICOLON
+
+/*declaration*/
+declaration_statute     ::= (INT int_declaration SEMICOLON) |
+                            (DOUBLE double_declaration SEMICOLON) |
+                            (BOOLEAN boolean_declaration SEMICOLON)
+
+/*comment*/
+comment_statute         ::= COMMENT statute
+
+/*graphics*/
+
+graphic_statute         ::= (pen_up_statute) |
+                            (pen_down_statute) |
+                            (pen_size_statute) |
+                            (pen_color_statute) |
+                            (set_x_statute) |
+                            (set_y_statute) |
+                            (clear_statute) |
+                            (move_on_x_statute) |
+                            (move_on_y_statute) |
+                            (rotate_to_right_statute) |
+                            (rotate_to_left_statute) |
+                            (rectangle_statute) |
+                            (triangle_statute) |
+                            (circle_statute)
+
+
+pen_up_statute                ::= PENUP LPAREN RPAREN SEMICOLON
+pen_down_statute              ::= PENDOWN LPAREN RPAREN SEMICOLON
+pen_size_statute              ::= PENSIZE LPAREN expression RPAREN SEMICOLON
+pen_color_statute             ::= PENCOLOR LPAREN expression COMMA expression COMMA expression RPAREN SEMICOLON
+set_x_statute                 ::= SETX LPAREN expression RPAREN SEMICOLON
+set_y_statute                 ::= SETY LPAREN expression RPAREN SEMICOLON
+clear_statute                 ::= CLEAR LPAREN RPAREN SEMICOLON
+move_on_x_statute             ::= MOVEONX LPAREN expression RPAREN SEMICOLON
+move_on_y_statute             ::= MOVEONY LPAREN expression RPAREN SEMICOLON
+rotate_to_right_statute       ::= ROTATETORIGHT LPAREN expression RPAREN SEMICOLON
+rotate_to_left_statute        ::= ROTATETOLEFT LPAREN expression RPAREN SEMICOLON
+rectangle_statute             ::= RECTANGLE LPAREN expression COMMA expression RPAREN SEMICOLON LPAREN expression RPAREN SEMICOLON
+triangle_statute              ::= TRIANGLE LPAREN expression COMMA expression RPAREN SEMICOLON
+circle_statute                ::= CIRCLE LPAREN expression RPAREN SEMICOLON
+
+/*return*/
+return_statute                ::= RETURN expression SEMICOLON

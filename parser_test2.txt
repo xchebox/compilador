@@ -1,37 +1,6 @@
 program yolo;
-int c;
-
-function int myfunction(){
-c = 12;
-c[c][c] = -4;
-return 0;
-}
-
-
-function double b(double s){
-double m;
-return c;
-}
-
-function int sa(int m){
-int s = 3.4;
-return c[s];
-}
-
+int a;
 main{
-int a = 3;
-int b;
-b = a;
-sa(3.5+2);
-if (3 ==3 ){
-rectangle(2,5);
-} else {
-circle(2);
+b();
 }
-
-do {
-hazesto(23);
-}while(3 ==2)
-}
-
 end;

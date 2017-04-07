@@ -1,5 +1,5 @@
 import copy;
-from variable_table import VarTable, Variable, Dimension
+from variable_table import VarTable, Variable
 
 last_type = 0;
 

@@ -51,11 +51,13 @@ def p_program(p):
 #main logic
 def p_main(p):
     'main : MAIN main_declared LBRACE statute RBRACE'
+    fStack.pop()#main removed from function stack
 
 #main declared. Used to know when the main has been declared
 def p_main_declared(p):
     'main_declared :            '
     functionTable.addFunction('main')#function added to func table
+    fStack.append('main');#main added from function stack
 
 #global_declaration
 def p_global_declaration(p):
@@ -119,14 +121,16 @@ def p_variable_declared(p):
 
 #possible array declaration
 def p_array(p):
-    '''array :      dimension_added array_mult
+    '''array :      LBRACKET CONST_INT RBRACKET dimension_added array_mult
                     | empty'''
 
 
 def p_dimension_added(p):
-    'dimension_added : LBRACKET CONST_INT RBRACKET'
-
-
+    'dimension_added : '
+    if onGlobalScope():#global scope
+        getLastVariableDeclaredFromFunction('global').addDimension(p[-2])#dimension added to variable
+    else :
+        getLastVariableDeclaredFromLastFunction().addDimension(p[-2])#dimension added to variable
 #possible array declaration multiple dimensions
 def p_array_mult(p):
     '''array_mult :  array'''

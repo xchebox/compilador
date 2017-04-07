@@ -55,7 +55,7 @@ def p_main(p):
 #main declared. Used to know when the main has been declared
 def p_main_declared(p):
     'main_declared :            '
-
+    functionTable.addFunction('main')#function added to func table
 
 #global_declaration
 def p_global_declaration(p):

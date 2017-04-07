@@ -1,3 +1,5 @@
 ply/*
 .DS_Store
 *.pyc
+parsetab.py
+parser.out

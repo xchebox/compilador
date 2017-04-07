@@ -3,3 +3,4 @@ ply/*
 *.pyc
 parsetab.py
 parser.out
+parser_test2.txt

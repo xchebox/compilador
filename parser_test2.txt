@@ -1,6 +1,13 @@
 program yolo;
 int a;
+
+function int b (){
+return 0;
+}
+
+
+
 main{
-b();
+
 }
 end;

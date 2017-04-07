@@ -1,7 +1,41 @@
 # Yacc example
 
 import ply.ply.yacc as yacc
+from used_types import TYPES
 from functions_table import *
+from stacks import *
+
+
+#generates new function table
+functionTable = FunctionTable()
+
+#checs if on global scope
+def onGlobalScope():
+    return not fStack
+
+#checks if function exists
+def functionExists(key):
+    return functionTable.exists(key)
+
+# checks if var exists on function
+def varExistsOnFunction(var, function):
+    return functionTable.getFunction(function).hasVariable(var)
+
+#get last variable on stack declared from a function table
+def getLastVariableDeclaredFromFunction(function):
+    return functionTable.getFunction(function).getVariable(getLastVariable())
+
+#get last variable declared on stack from last function declared on stack
+def getLastVariableDeclaredFromLastFunction():
+    return functionTable.getFunction(getLastFunction()).getVariable(getLastVariable())
+
+#add variabe to var table on function
+def addVariableToFunction(variable, function):
+    functionTable.getFunction(function).addVariable(variable)
+
+#add variabe to var table on function
+def addVariableToLastFunction(variable):
+    functionTable.getFunction(getLastFunction).addVariable(variable)
 
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
@@ -13,14 +47,11 @@ def p_program(p):
 #main logic
 def p_main(p):
     'main : MAIN main_declared LBRACE statute RBRACE'
-    FUNCTIONS['main'].setVarTable(LOCALS);
-    LOCALS.clear();
-    FUNCS_STACK.pop();
+
 #main declared. Used to know when the main has been declared
 def p_main_declared(p):
-    'main_declared :'
-    FUNCTIONS['main'] = Function();
-    FUNCS_STACK.append('main');
+    'main_declared :            '
+
 
 #global_declaration
 def p_global_declaration(p):
@@ -32,47 +63,50 @@ def p_declaration_statute(p):
     '''declaration_statute :      INT int_declaration SEMICOLON
                                 | DOUBLE double_declaration SEMICOLON
                                 | BOOLEAN boolean_declaration SEMICOLON'''
+    vStack.pop(); #when the rule ends the function has already been defined
 
 
 #int declaration
 def p_int_declaration(p):
-    'int_declaration :   ID array int_assignation'
-    #global definition added to var_table
-    if (GLOBAL.has_key(p[1])):
-        error('variable ' + p[1] +' already defined on global scope',p.lineno(1));
-    if not FUNCS_STACK:
-        GLOBAL[p[1]] = Variable(0, TYPES["int"]);
-    else:
-        if (LOCALS.has_key(p[1])):
-            error('variable ' + p[1] +' already defined on local scope',p.lineno(1));
-        LOCALS[p[1]] = Variable(0, TYPES["int"]);
+    'int_declaration :   variable_declared array int_assignation'
+    if onGlobalScope() :
+        getLastVariableDeclaredFromFunction('global').setType(TYPES['int'])
+    else :
+        getLastVariableDeclaredFromLastFunction().setType(TYPES['int'])
 
 
 #double declaration
 def p_double_declaration(p):
-    'double_declaration :   ID array double_assignation'
-    #global definition added to var_table
-    if (GLOBAL.has_key(p[1])):
-        error('variable ' + p[1] +' already defined on global scope',p.lineno(1));
-    if not FUNCS_STACK:
-        GLOBAL[p[1]] = Variable(0, TYPES["double"]);
-    else:
-        if (LOCALS.has_key(p[1])):
-            error('variable ' + p[1] +' already defined on local scope',p.lineno(1));
-        LOCALS[p[1]] = Variable(0, TYPES["double"]);
+    'double_declaration :   variable_declared array double_assignation'
+    if onGlobalScope() :
+        getLastVariableDeclaredFromFunction('global').setType(TYPES['double'])
+    else :
+        getLastVariableDeclaredFromLastFunction().setType(TYPES['double'])
 
 #boolean declaration
 def p_boolean_declaration(p):
-    'boolean_declaration :   ID array boolean_assignation'
+    'boolean_declaration :   variable_declared array boolean_assignation'
+    if onGlobalScope() :
+        getLastVariableDeclaredFromFunction('global').setType(TYPES['boolean'])
+    else :
+        getLastVariableDeclaredFromLastFunction().setType(TYPES['boolean'])
+
+#variable declared. Extra to know a variable has been declared
+def p_variable_declared(p):
+    'variable_declared : ID  '
     #global definition added to var_table
-    if (GLOBAL.has_key(p[1])):
-        error('variable ' + p[1] +' already defined on global scope',p.lineno(1));
-    if not FUNCS_STACK:
-        GLOBAL[p[1]] = Variable(0, TYPES["boolean"]);
-    else:
-        if (LOCALS.has_key(p[1])):
-            error('variable ' + p[1] +' already defined on local scope',p.lineno(1));
-        LOCALS[p[1]] = Variable(0, TYPES["boolean"]);
+    if onGlobalScope(): #empty, -> main
+        if varExistsOnFunction(p[1], 'global'):
+            error('variable ' + p[1] +' already defined on global scope',p.lineno(1))
+        else:
+            addVariableToFunction(p[1], 'global')
+    else : #function scope
+        if varExistsOnFunction(p[1], getLastFunction()):# exists on function var table
+            error('variable ' + p[1] +' already defined on function scope',p.lineno(1))
+        else:
+            addVariableToLastFunction(p[1])
+    vStack.append(p[1])# added to var stack
+
 
 
 #main declaration
@@ -81,8 +115,13 @@ def p_boolean_declaration(p):
 
 #possible array declaration
 def p_array(p):
-    '''array :        LBRACKET CONST_INT RBRACKET array_mult
+    '''array :      dimension_added array_mult
                     | empty'''
+
+
+def p_dimension_added(p):
+    'dimension_added : LBRACKET CONST_INT RBRACKET'
+
 
 #possible array declaration multiple dimensions
 def p_array_mult(p):
@@ -104,12 +143,8 @@ def p_function(p):
     # using a function
     if p[1] == '(':
         #checks functions exists
-        if not FUNCTIONS.has_key( p[-1] ):
-            error('function ' + p[-1] + ' not declared');
-    #checks var exists
-    else :
-        if not GLOBAL.has_key( p[-1] ) and ( not FUNCS_STACK or not LOCALS.has_key( p[-1] ) ):
-            error('var '+ p[-1] +' not defined');
+        if not functionExists( p[-1] ):
+            error('function ' + p[-1] + ' not declared')
 
 
 #params to be used on function call
@@ -142,9 +177,6 @@ def p_boolean_assignation(p):
 #unknown variable assignation
 def p_assignation_statute(p):
     '''assignation_statute : ID array_u ASSIGN expression SEMICOLON'''
-    #var verification
-    if not GLOBAL.has_key( p[1] ) and ( not FUNCS_STACK or not LOCALS.has_key( p[1] ) ):
-        error('var '+p[1]+' not defined');
 
 
 #expression
@@ -198,13 +230,24 @@ def p_term(p):
     '''term :         CONST_INT
                     | CONST_DOUBLE
                     | CONST_BOOLEAN
-                    | ID function
+                    | ID id_used function
                     | LPAREN expression RPAREN'''
+
+def p_id_used(p):
+    'id_used :      '
+    if onGlobalScope() :
+        if not varExistsOnFunction(p[-1], 'global'):
+            error('var '+p[-1]+' not defined')
+    else : #function scope
+        if not varExistsOnFunction(p[-1], getLastFunction):# var not declared on local
+            if not varExistsOnFunction(p[-1], 'global scope'): #var not declared on global
+                error('var '+p[-1]+' not defined')
 
 #function
 def p_function_declaration(p):
     '''function_declaration :     function_header function_main
                                 | empty'''
+    fStack.pop()# function defined so we remove it from the stack
 
 #function declaration
 def p_function_header(p):
@@ -213,12 +256,12 @@ def p_function_header(p):
 #function declared. Used to know when a function has been declared
 def p_function_declared(p):
     '''function_declared :'''
-    print(last_type);
-    if FUNCTIONS.has_key(p[-1]):
-        error('function ' + p[-1] + ' already defined');
-    FUNCTIONS[p[-1]] = Function(last_type);# function and return type added
-    FUNCS_STACK.append(p[-1]);
-
+    if functionExists(p[-1]):
+        error("Function "+p[-1]+" already declared")
+    else :
+        fStack.append(p[-1])#function name added to function stack
+        functionTable.addFunction(p[-1])#function added to func table
+        functionTable.getFunction(p[-1]).setReturnType(p[-2])#return value added
 
 #function main
 def p_function_main(p):
@@ -236,10 +279,6 @@ def p_param_declaration(p):
 #param declared. Used to know when a param has been declared
 def p_param_declared(p):
     '''param_declared :'''
-    if (LOCALS.has_key(p[-1])):
-        error('variable ' + p[-1] +' already defined on local scope',p.lineno(-1));
-    LOCALS[p[-1]] = Variable([0], last_type);
-    FUNCTIONS[FUNCS_STACK[-1]].addParam();
 
 #multiples params
 def p_mult_params_declaration(p):
@@ -252,7 +291,6 @@ def p_type(p):
     '''type :     DOUBLE
                 | INT
                 | BOOLEAN'''
-    last_type = TYPES[p[1]];
 
 
 #statute
@@ -288,13 +326,13 @@ def p_do_while(p):
 #return statement
 def p_return_statute(p):
     '''return_statute :   RETURN expression SEMICOLON'''
-    FUNCTIONS[FUNCS_STACK [- 1]].setVarTable(LOCALS);#locals added to funct table
-    LOCALS.clear();
-    FUNCS_STACK.pop();
 
 #function statute
 def p_function_statute(p):
     '''function_statute :   ID LPAREN params RPAREN SEMICOLON'''
+    #checks functions exists
+    if not functionExists( p[1] ):
+        error('function ' + p[1] + ' not declared');
 
 #comment statute
 def p_comment_statute(p):

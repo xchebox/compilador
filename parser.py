@@ -37,6 +37,10 @@ def addVariableToFunction(variable, function):
 def addVariableToLastFunction(variable):
     functionTable.getFunction(getLastFunction).addVariable(variable)
 
+#get a variable from a var table of a function
+def getVariableFromFunction(variable, function):
+    return functionTable.getFunction(function).getVariable(variable)
+
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
 
@@ -247,7 +251,6 @@ def p_id_used(p):
 def p_function_declaration(p):
     '''function_declaration :     function_header function_main
                                 | empty'''
-    fStack.pop()# function defined so we remove it from the stack
 
 #function declaration
 def p_function_header(p):
@@ -279,6 +282,9 @@ def p_param_declaration(p):
 #param declared. Used to know when a param has been declared
 def p_param_declared(p):
     '''param_declared :'''
+    addVariableToLastFunction(p[-1])
+    getVariableFromFunction(p[-1], getLastFunction).setType(p[-2])#type added to first var or first argument
+    functionTable.getFunction(getLastFunction()).addParam() #param counter added
 
 #multiples params
 def p_mult_params_declaration(p):
@@ -326,6 +332,7 @@ def p_do_while(p):
 #return statement
 def p_return_statute(p):
     '''return_statute :   RETURN expression SEMICOLON'''
+    fStack.pop()# function defined so we remove it from the stack
 
 #function statute
 def p_function_statute(p):

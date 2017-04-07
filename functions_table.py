@@ -1,51 +1,44 @@
 import copy;
+from variable_table import VarTable, Variable, Dimension
 
 last_type = 0;
 
-TYPES = { #different types
-    "int" : 0,
-    "double" : 1,
-    "string" : 2,
-    "boolean" : 3,
-}
 
 COUNTERS = { #different types counters
     "int" : 0,
     "double" : 0,
-    "string" : 0
+    "boolean" : 0,
 }
 
+class FunctionTable:
+    def __init__(self):
+        self.table = {'global':Function()}
 
-class Variable():
+    def exists(self, key):
+        return self.table.has_key(key)
 
-    def __init__(self, var_memory, var_type):
-        self.memory = var_memory;
-        self.type = var_type;
+    def addFunction(self, id):
+        self.table[id] = Function()
 
-    def getType(self):
-        return self.type
+    def getFunctionTable(self):
+        return self.table
 
-    def getMemory(self):
-        return self.memory
+    def getFunction(self,id):
+        return self.table[id]
 
-    def setType(self, var_type):
-        self.type = var_type;
 
 class Function():
 
     def __init__(self, return_type = None, num_params = 0): #return type and params counter
         self.num_params = num_params;
         self.return_type = return_type;
-        self.var_table = {};
+        self.var_table = VarTable();
 
     def addParam(self):
         self.num_params += 1;
 
     def setReturnType(self, return_t):
         self.return_type = return_t;
-
-    def setVarTable(self, table):
-        self.var_table = copy.deepcopy(table);
 
     def getVarTable(self):
         return self.var_table;
@@ -56,13 +49,21 @@ class Function():
     def getReturnType(self):
         return self.return_type;
 
+    def hasVariable(self, key):
+        return self.var_table.exists(key)
+
+    def addVariable(self, id, var_type=None):
+        self.var_table.addVariable(id, var_type)
+
+    def getVariable(self, id):
+        return self.var_table.getVariable(id)
+
 
 
 
 
 GLOBAL = {};
 
-FUNCTIONS = {};
 
 FUNCS_STACK = [];
 

@@ -1,7 +1,7 @@
 # Yacc example
 
 import ply.ply.yacc as yacc
-from used_types import TYPES
+from semantic_cube import TYPES, semantic_cube
 from functions_table import *
 from stacks import *
 

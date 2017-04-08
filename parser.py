@@ -110,7 +110,7 @@ def p_variable_declared(p):
         if varExistsOnFunction(p[1], getLastFunction()):# exists on function var table
             error('variable ' + p[1] +' already defined on function scope',p.lineno(1))
         else:
-            addVariableToLastFunction(p[1])
+            addVariableToFunction(p[1], getLastFunction())
     vStack.append(p[1])# added to var stack
 
 
@@ -137,6 +137,15 @@ def p_dimension_added(p):
 def p_array_u(p):
     '''array_u :      LBRACKET array_used expression RBRACKET array_u
                     | empty'''
+    if p[1] == '[':
+        if onGlobalScope() :
+            if not varExistsOnFunction(p[-1], 'global'):
+                error('var '+p[-1]+' not defined')
+        else : #function scope
+            if not varExistsOnFunction(p[-1], getLastFunction()):# var not declared on local
+                if not varExistsOnFunction(p[-1], 'global'): #var not declared on global
+                    error('var '+p[-1]+' not defined')
+
 
 def p_array_used(p):
     'array_used :     '
@@ -236,18 +245,9 @@ def p_term(p):
     '''term :         CONST_INT
                     | CONST_DOUBLE
                     | CONST_BOOLEAN
-                    | ID id_used function
+                    | ID function
                     | LPAREN expression RPAREN'''
 
-def p_id_used(p):
-    'id_used :      '
-    if onGlobalScope() :
-        if not varExistsOnFunction(p[-1], 'global'):
-            error('var '+p[-1]+' not defined')
-    else : #function scope
-        if not varExistsOnFunction(p[-1], getLastFunction):# var not declared on local
-            if not varExistsOnFunction(p[-1], 'global scope'): #var not declared on global
-                error('var '+p[-1]+' not defined')
 
 #function
 def p_function_declaration(p):
@@ -256,7 +256,13 @@ def p_function_declaration(p):
 
 #function declaration
 def p_function_header(p):
-    '''function_header :   FUNCTION type ID function_declared LPAREN params_declaration RPAREN'''
+    '''function_header :   FUNCTION  return_declared LPAREN params_declaration RPAREN'''
+
+#called after return statement declared
+def p_return_declared(p):
+    '''return_declared :    DOUBLE ID  function_declared
+                            | INT ID  function_declared
+                            | BOOLEAN ID  function_declared'''
 
 #function declared. Used to know when a function has been declared
 def p_function_declared(p):
@@ -266,7 +272,7 @@ def p_function_declared(p):
     else :
         fStack.append(p[-1])#function name added to function stack
         functionTable.addFunction(p[-1])#function added to func table
-        functionTable.getFunction(p[-1]).setReturnType(p[-2])#return value added
+        functionTable.getFunction(p[-1]).setReturnType(TYPES[p[-2]])#return value added
 
 #function main
 def p_function_main(p):
@@ -279,13 +285,15 @@ def p_params_declaration(p):
 
 #param section
 def p_param_declaration(p):
-    '''param_declaration :       type ID param_declared mult_params_declaration'''
+    '''param_declaration :       INT ID param_declared mult_params_declaration
+                                | DOUBLE ID param_declared mult_params_declaration
+                                | BOOLEAN ID param_declared mult_params_declaration'''
 
 #param declared. Used to know when a param has been declared
 def p_param_declared(p):
     '''param_declared :'''
     addVariableToLastFunction(p[-1])
-    getVariableFromFunction(p[-1], getLastFunction).setType(p[-2])#type added to first var or first argument
+    getVariableFromFunction(p[-1], getLastFunction()).setType(TYPES[p[-2]])#type added to first var or first argument
     functionTable.getFunction(getLastFunction()).addParam() #param counter added
 
 #multiples params
@@ -295,7 +303,7 @@ def p_mult_params_declaration(p):
 
 
 #different types
-def p_type(p):
+def p_type(p):##############################delete this
     '''type :     DOUBLE
                 | INT
                 | BOOLEAN'''
@@ -430,7 +438,13 @@ parser.defaulted_states = {};
 
 #test
 
-file = open("parser_test2.txt", "r")
+file = open("parser_test.txt", "r")
 parser.parse( file.read() )
+
+for f in functionTable.getFunctionTable():
+    print "function: %s has %s parameters and return type is %s" % (f, functionTable.getFunctionTable()[f].getNumParams(), functionTable.getFunctionTable()[f].getReturnType())
+    print "the variables are :"
+    for v in functionTable.getFunctionTable()[f].getVarTable().table:
+        print "var %s is %s" % (v, functionTable.getFunctionTable()[f].getVarTable().table[v].getType())
 
 #print(FUNCTIONS['b'].getReturnType());

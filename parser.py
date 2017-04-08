@@ -35,7 +35,7 @@ def addVariableToFunction(variable, function):
 
 #add variabe to var table on function
 def addVariableToLastFunction(variable):
-    functionTable.getFunction(getLastFunction).addVariable(variable)
+    functionTable.getFunction(getLastFunction()).addVariable(variable)
 
 #get a variable from a var table of a function
 def getVariableFromFunction(variable, function):
@@ -121,7 +121,7 @@ def p_variable_declared(p):
 
 #possible array declaration
 def p_array(p):
-    '''array :      LBRACKET CONST_INT RBRACKET dimension_added array_mult
+    '''array :      LBRACKET CONST_INT RBRACKET dimension_added array
                     | empty'''
 
 
@@ -131,18 +131,16 @@ def p_dimension_added(p):
         getLastVariableDeclaredFromFunction('global').addDimension(p[-2])#dimension added to variable
     else :
         getLastVariableDeclaredFromLastFunction().addDimension(p[-2])#dimension added to variable
-#possible array declaration multiple dimensions
-def p_array_mult(p):
-    '''array_mult :  array'''
+
 
 #possible array use
 def p_array_u(p):
-    '''array_u :      LBRACKET expression RBRACKET array_mult_u
+    '''array_u :      LBRACKET array_used expression RBRACKET array_u
                     | empty'''
 
-#possible array use multiple dimensions
-def p_array_mult_u(p):
-    '''array_mult_u :  array_u'''
+def p_array_used(p):
+    'array_used :     '
+
 
 #possible function use
 def p_function(p):

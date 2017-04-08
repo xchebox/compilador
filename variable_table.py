@@ -29,3 +29,6 @@ class Variable:
 
     def addDimension(self, newDimension):
         self.dimension.append(newDimension)
+
+    def getDimension(self):
+        return self.dimension

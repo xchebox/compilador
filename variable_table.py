@@ -11,12 +11,12 @@ class VarTable:
     def getVariable(self, id):
         return self.table[id]
 
-class Variable():
+class Variable:
 
     def __init__(self, var_memory, var_type):
         self.memory = var_memory; #virtual memory/counter
         self.type = var_type; #variable type
-        self.dimension = None #not an array
+        self.dimension = [] #not an array
 
     def getType(self):
         return self.type
@@ -28,17 +28,7 @@ class Variable():
         self.type = var_type;
 
     def addDimension(self, newDimension):
-        d = self.dimension
-        if not d is None:
-            while not d.getNextDimension is None:
-                d = d.getNextDimension #checks for last dimension
-        d = Dimension(newDimension)
+        self.dimension.append(newDimension)
 
-
-class Dimension():
-    def __init__(self, newDimension):
-        self.dimension = newDimension #dimension added upper limit
-        self.nextDimension = None # no next dimension
-
-    def getNextDimension(self):
-        return self.nextDimension
+    def getDimension(self):
+        return self.dimension

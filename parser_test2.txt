@@ -1,6 +1,0 @@
-program yolo;
-int a;
-main{
-b();
-}
-end;

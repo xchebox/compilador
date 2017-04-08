@@ -35,7 +35,11 @@ def addVariableToFunction(variable, function):
 
 #add variabe to var table on function
 def addVariableToLastFunction(variable):
-    functionTable.getFunction(getLastFunction).addVariable(variable)
+    functionTable.getFunction(getLastFunction()).addVariable(variable)
+
+#get a variable from a var table of a function
+def getVariableFromFunction(variable, function):
+    return functionTable.getFunction(function).getVariable(variable)
 
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
@@ -47,11 +51,13 @@ def p_program(p):
 #main logic
 def p_main(p):
     'main : MAIN main_declared LBRACE statute RBRACE'
+    fStack.pop()#main removed from function stack
 
 #main declared. Used to know when the main has been declared
 def p_main_declared(p):
     'main_declared :            '
-
+    functionTable.addFunction('main')#function added to func table
+    fStack.append('main');#main added from function stack
 
 #global_declaration
 def p_global_declaration(p):
@@ -115,26 +121,26 @@ def p_variable_declared(p):
 
 #possible array declaration
 def p_array(p):
-    '''array :      dimension_added array_mult
+    '''array :      LBRACKET CONST_INT RBRACKET dimension_added array
                     | empty'''
 
 
 def p_dimension_added(p):
-    'dimension_added : LBRACKET CONST_INT RBRACKET'
+    'dimension_added : '
+    if onGlobalScope():#global scope
+        getLastVariableDeclaredFromFunction('global').addDimension(p[-2])#dimension added to variable
+    else :
+        getLastVariableDeclaredFromLastFunction().addDimension(p[-2])#dimension added to variable
 
-
-#possible array declaration multiple dimensions
-def p_array_mult(p):
-    '''array_mult :  array'''
 
 #possible array use
 def p_array_u(p):
-    '''array_u :      LBRACKET expression RBRACKET array_mult_u
+    '''array_u :      LBRACKET array_used expression RBRACKET array_u
                     | empty'''
 
-#possible array use multiple dimensions
-def p_array_mult_u(p):
-    '''array_mult_u :  array_u'''
+def p_array_used(p):
+    'array_used :     '
+
 
 #possible function use
 def p_function(p):
@@ -247,7 +253,6 @@ def p_id_used(p):
 def p_function_declaration(p):
     '''function_declaration :     function_header function_main
                                 | empty'''
-    fStack.pop()# function defined so we remove it from the stack
 
 #function declaration
 def p_function_header(p):
@@ -279,6 +284,9 @@ def p_param_declaration(p):
 #param declared. Used to know when a param has been declared
 def p_param_declared(p):
     '''param_declared :'''
+    addVariableToLastFunction(p[-1])
+    getVariableFromFunction(p[-1], getLastFunction).setType(p[-2])#type added to first var or first argument
+    functionTable.getFunction(getLastFunction()).addParam() #param counter added
 
 #multiples params
 def p_mult_params_declaration(p):
@@ -326,6 +334,7 @@ def p_do_while(p):
 #return statement
 def p_return_statute(p):
     '''return_statute :   RETURN expression SEMICOLON'''
+    fStack.pop()# function defined so we remove it from the stack
 
 #function statute
 def p_function_statute(p):

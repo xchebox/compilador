@@ -8,8 +8,14 @@ return 0;
 }
 
 
-function string b(double s){
+function int b(double s){
 double m;
+double m1;
+double m2;
+double m3;
+double m4;
+double m5;
+boolean bo;
 return c;
 }
 

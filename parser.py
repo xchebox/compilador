@@ -76,26 +76,26 @@ def p_declaration_statute(p):
 def p_int_declaration(p):
     'int_declaration :   variable_declared array int_assignation'
     if onGlobalScope() :
-        getLastVariableDeclaredFromFunction('global').setType(TYPES['int'])
+        functionTable.getFunction('global').getVarTable().setVarType(getLastVariable(), TYPES['int']) #type added
     else :
-        getLastVariableDeclaredFromLastFunction().setType(TYPES['int'])
+        functionTable.getFunction(getLastFunction()).getVarTable().setVarType(getLastVariable(), TYPES['int']) #type added
 
 
 #double declaration
 def p_double_declaration(p):
     'double_declaration :   variable_declared array double_assignation'
     if onGlobalScope() :
-        getLastVariableDeclaredFromFunction('global').setType(TYPES['double'])
+        functionTable.getFunction('global').getVarTable().setVarType(getLastVariable(), TYPES['double']) #type added
     else :
-        getLastVariableDeclaredFromLastFunction().setType(TYPES['double'])
+        functionTable.getFunction(getLastFunction()).getVarTable().setVarType(getLastVariable(), TYPES['double']) #type added
 
 #boolean declaration
 def p_boolean_declaration(p):
     'boolean_declaration :   variable_declared array boolean_assignation'
     if onGlobalScope() :
-        getLastVariableDeclaredFromFunction('global').setType(TYPES['boolean'])
+        functionTable.getFunction('global').getVarTable().setVarType(getLastVariable(), TYPES['boolean']) #type added
     else :
-        getLastVariableDeclaredFromLastFunction().setType(TYPES['boolean'])
+        functionTable.getFunction(getLastFunction()).getVarTable().setVarType(getLastVariable(), TYPES['boolean']) #type added 
 
 #variable declared. Extra to know a variable has been declared
 def p_variable_declared(p):
@@ -293,7 +293,7 @@ def p_param_declaration(p):
 def p_param_declared(p):
     '''param_declared :'''
     addVariableToLastFunction(p[-1])
-    getVariableFromFunction(p[-1], getLastFunction()).setType(TYPES[p[-2]])#type added to first var or first argument
+    functionTable.getFunction(getLastFunction()).getVarTable().setVarType(p[-1], TYPES[p[-2]]) #type added to first var or first argument
     functionTable.getFunction(getLastFunction()).addParam() #param counter added
 
 #multiples params
@@ -445,6 +445,6 @@ for f in functionTable.getFunctionTable():
     print "function: %s has %s parameters and return type is %s" % (f, functionTable.getFunctionTable()[f].getNumParams(), functionTable.getFunctionTable()[f].getReturnType())
     print "the variables are :"
     for v in functionTable.getFunctionTable()[f].getVarTable().table:
-        print "var %s is %s" % (v, functionTable.getFunctionTable()[f].getVarTable().table[v].getType())
+        print "var %s is %s and memory %s" % (v, functionTable.getFunctionTable()[f].getVarTable().table[v].getType(), functionTable.getFunctionTable()[f].getVarTable().table[v].getMemory())
 
 #print(FUNCTIONS['b'].getReturnType());

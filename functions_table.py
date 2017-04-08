@@ -1,14 +1,6 @@
 import copy;
 from variable_table import VarTable, Variable
 
-last_type = 0;
-
-
-COUNTERS = { #different types counters
-    "int" : 0,
-    "double" : 0,
-    "boolean" : 0,
-}
 
 class FunctionTable:
     def __init__(self):
@@ -30,24 +22,24 @@ class FunctionTable:
 class Function():
 
     def __init__(self, return_type = None, num_params = 0): #return type and params counter
-        self.num_params = num_params;
-        self.return_type = return_type;
-        self.var_table = VarTable();
+        self.num_params = num_params
+        self.return_type = return_type
+        self.var_table = VarTable()
 
     def addParam(self):
-        self.num_params += 1;
+        self.num_params += 1
 
     def setReturnType(self, return_t):
-        self.return_type = return_t;
+        self.return_type = return_t
 
     def getVarTable(self):
-        return self.var_table;
+        return self.var_table
 
     def getNumParams(self):
-        return self.num_params;
+        return self.num_params
 
     def getReturnType(self):
-        return self.return_type;
+        return self.return_type
 
     def hasVariable(self, key):
         return self.var_table.exists(key)
@@ -57,14 +49,3 @@ class Function():
 
     def getVariable(self, id):
         return self.var_table.getVariable(id)
-
-
-
-
-
-GLOBAL = {};
-
-
-FUNCS_STACK = [];
-
-LOCALS = {};

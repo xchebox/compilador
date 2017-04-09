@@ -2,6 +2,7 @@
 
 import ply.ply.yacc as yacc
 from semantic_cube import TYPES, semantic_cube
+from operators import operators
 from functions_table import *
 from stacks import *
 from memory import MemoryManager
@@ -10,6 +11,9 @@ from quadruple import QuadrupleManager
 
 #generates new function table
 functionTable = FunctionTable()
+
+#QuadrupleManager
+quadrupleManager = QuadrupleManager()
 
 #MemoryManager
 memoryManager = MemoryManager()
@@ -45,6 +49,32 @@ def addVariableToLastFunction(variable):
 #get a variable from a var table of a function
 def getVariableFromFunction(variable, function):
     return functionTable.getFunction(function).getVariable(variable)
+
+#used to generates quadruple. A common function used by the different operators
+def generateOperatorNextQuadruple(operator):
+    global temporalCounter
+    if isSameOrder(operator):#last operator in stack is a mult
+        if not getPenultimateType() is None:
+            resultType = semantic_cube[getLastType()][lookOperatorStack()][getPenultimateType()]
+            if  resultType != -1 : #can do operator
+                result = quadrupleManager.addQuadruple(lookOperatorStack(), getPenultimateOperand(), getLastOperand(), 't'+`temporalCounter`)
+                temporalCounter += 1
+                #remove last operator
+                operatorsStack.pop()
+                #remove operands used
+                operandsStack.pop()
+                operandsStack.pop()
+                #remove types used
+                typesStack.pop()
+                typesStack.pop()
+                #add result to stack
+                operandsStack.append(result)
+                #add result type to stack
+                typesStack.append(resultType)
+                return 1
+            else :
+                return 0
+    return -1
 
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
@@ -154,15 +184,6 @@ def p_dimension_added(p):
 def p_array_u(p):
     '''array_u :      LBRACKET array_used expression RBRACKET array_u
                     | empty'''
-    if p[1] == '[':
-        if onGlobalScope() :
-            if not varExistsOnFunction(p[-1], 'global'):
-                error('var '+p[-1]+' not defined')
-        else : #function scope
-            if not varExistsOnFunction(p[-1], getLastFunction()):# var not declared on local
-                if not varExistsOnFunction(p[-1], 'global'): #var not declared on global
-                    error('var '+p[-1]+' not defined')
-
 
 def p_array_used(p):
     'array_used :     '
@@ -177,6 +198,23 @@ def p_function(p):
         #checks functions exists
         if not functionExists( p[-1] ):
             error('function ' + p[-1] + ' not declared')
+    else :
+        if onGlobalScope() :
+            if not varExistsOnFunction(p[-1], 'global'):
+                error('var '+p[-1]+' not defined')
+            else:
+                typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
+                operandsStack.append(p[-1])
+        else : #function scope
+            if not varExistsOnFunction(p[-1], getLastFunction()):# var not declared on local
+                if not varExistsOnFunction(p[-1], 'global'): #var not declared on global
+                    error('var '+p[-1]+' not defined')
+                else : #var used from global scope
+                    typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
+                    operandsStack.append(p[-1])
+            else:#variable used on local scope
+                typesStack.append(getVariableFromFunction(p[-1], getLastFunction()).getType())
+                operandsStack.append(p[-1])
 
 
 #params to be used on function call
@@ -213,57 +251,138 @@ def p_assignation_statute(p):
 
 #expression
 def p_expression(p):
-    '''expression :     logical'''
+    '''expression :     logical '''
 
 #logic
 def p_logical(p):
-    '''logical :      relational logical_main'''
+    '''logical :      relational logical_after_term logical_main '''
 
 #used to check multiple logical
 def p_logical_main(p):
-    '''logical_main :     AND logical
-                        | OR logical
+    '''logical_main :     AND logical_used logical
+                        | OR logical_used logical
                         | empty'''
+
+#used to know the operator used
+def p_logical_used(p):
+    'logical_used :      '
+    operatorsStack.append(operators[p[-1]])
+
+#used to create quadruple. runs just after term is received
+def p_logical_after_term(p):
+    'logical_after_term :  '
+    if generateOperatorNextQuadruple('&') == 0:
+        error('type mismatch')
 
 #relational
 def p_relational(p):
-    '''relational :   sum relational_main'''
+    '''relational :   sum relational_after_term relational_main'''
 
 #used to check multiple relations
 def p_relational_main(p):
-    '''relational_main :      EQUALS relational
-                            | LESS relational
-                            | GREATER relational
+    '''relational_main :      EQUALS relational_used relational
+                            | LESS relational_used relational
+                            | GREATER relational_used relational
                             | empty'''
+
+#used to know the operator used
+def p_relational_used(p):
+    'relational_used :      '
+    operatorsStack.append(operators[p[-1]])
+
+#used to create quadruple. runs just after term is received
+def p_relational_after_term(p):
+    'relational_after_term :  '
+    if generateOperatorNextQuadruple('==') == 0:
+        error('type mismatch')
 
 
 #sum
 def p_sum(p):
-    '''sum :      mult sum_main'''
+    '''sum :      mult sum_after_term sum_main'''
 
 #used to check multiple sums
 def p_sum_main(p):
-    '''sum_main :     PLUS sum
-                    | MINUS sum
+    '''sum_main :     PLUS sum_used sum
+                    | MINUS sum_used sum
                     | empty'''
+
+#used to know the operator used
+def p_sum_used(p):
+    'sum_used :      '
+    operatorsStack.append(operators[p[-1]])
+
+#used to create quadruple. runs just after term is received
+def p_sum_after_term(p):
+    'sum_after_term :  '
+    if generateOperatorNextQuadruple('+') == 0:
+        error('type mismatch')
 
 #multiplication
 def p_mult(p):
-    '''mult :         term mult_main'''
+    '''mult :         term mult_after_term mult_main'''
 
 #used to check multiple multiplications
 def p_mult_main(p):
-    '''mult_main :        MULT mult
-                        | DIVIDE mult
+    '''mult_main :        MULT mult_used mult
+                        | DIVIDE mult_used mult
                         | empty'''
+
+#used to know the operator used
+def p_mult_used(p):
+    'mult_used :      '
+    operatorsStack.append(operators[p[-1]])
+
+#used to create quadruple. runs just after term is received
+def p_mult_after_term(p):
+    'mult_after_term :  '
+    if generateOperatorNextQuadruple('*') == 0:
+        error('type mismatch')
 
 #atomic element for expression
 def p_term(p):
-    '''term :         CONST_INT
-                    | CONST_DOUBLE
-                    | CONST_BOOLEAN
+    '''term :         CONST_INT term_int_used
+                    | CONST_DOUBLE term_double_used
+                    | CONST_BOOLEAN term_boolean_used
                     | ID function
-                    | LPAREN expression RPAREN'''
+                    | LPAREN term_parenthesis_used expression RPAREN'''
+    #remove false bottom
+    if p[1] == '(': #TODO check if works properly
+        operatorsStack.pop()
+
+
+#rule to identify the used type
+def p_term_int_used(p):
+    'term_int_used :     '
+    global temporalCounter
+    operandsStack.append('t'+`temporalCounter`)
+    temporalCounter += 1
+    #type added to stack
+    typesStack.append(TYPES['int'])
+
+#rule to identify the used type
+def p_term_double_used(p):
+    'term_double_used :     '
+    global temporalCounter
+    operandsStack.append('t'+`temporalCounter`)
+    temporalCounter += 1
+    #type added to stack
+    typesStack.append(TYPES['double'])
+
+#rule to identify the used type
+def p_term_boolean_used(p):
+    'term_boolean_used :     '
+    global temporalCounter
+    operandsStack.append('t'+`temporalCounter`)
+    temporalCounter += 1
+    #type added to stack
+    typesStack.append(TYPES['boolean'])
+
+#rule to identify a use of parenthesis
+def p_term_parenthesis_used(p):
+    'term_parenthesis_used :     '
+    #add false bottom
+    operatorsStack.append(FALSE_BOTTOM)
 
 
 #function
@@ -465,5 +584,10 @@ for f in functionTable.getFunctionTable():
     print "the variables are :"
     for v in functionTable.getFunctionTable()[f].getVarTable().table:
         print "var %s is %s and memory %s and size of %s" % (v, functionTable.getFunctionTable()[f].getVarTable().table[v].getType(), functionTable.getFunctionTable()[f].getVarTable().table[v].getMemory(), functionTable.getFunctionTable()[f].getVarTable().table[v].getTotalMemoryDimension())
+
+print "Quadruples"
+
+for q in quadrupleManager.quadrupleStack:
+    print "%s %s %s %s" % (operators.keys()[operators.values().index(q.operator)], q.firstOperand, q.secondOperand, q.result)
 
 #print(FUNCTIONS['b'].getReturnType());

@@ -4,10 +4,15 @@ import ply.ply.yacc as yacc
 from semantic_cube import TYPES, semantic_cube
 from functions_table import *
 from stacks import *
+from memory import MemoryManager
+from quadruple import QuadrupleManager
 
 
 #generates new function table
 functionTable = FunctionTable()
+
+#MemoryManager
+memoryManager = MemoryManager()
 
 #checs if on global scope
 def onGlobalScope():
@@ -76,26 +81,38 @@ def p_declaration_statute(p):
 def p_int_declaration(p):
     'int_declaration :   variable_declared array int_assignation'
     if onGlobalScope() :
-        functionTable.getFunction('global').getVarTable().setVarType(getLastVariable(), TYPES['int']) #type added
+        getLastVariableDeclaredFromFunction('global').setType(TYPES['int']) #type added
+        size = getLastVariableDeclaredFromFunction('global').getTotalMemoryDimension()
+        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestIntMemory(size))
     else :
-        functionTable.getFunction(getLastFunction()).getVarTable().setVarType(getLastVariable(), TYPES['int']) #type added
+        getLastVariableDeclaredFromLastFunction().setType(TYPES['int']) #type added
+        size = getLastVariableDeclaredFromLastFunction().getTotalMemoryDimension()
+        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.requestIntMemory(size))
 
 
 #double declaration
 def p_double_declaration(p):
     'double_declaration :   variable_declared array double_assignation'
     if onGlobalScope() :
-        functionTable.getFunction('global').getVarTable().setVarType(getLastVariable(), TYPES['double']) #type added
+        getLastVariableDeclaredFromFunction('global').setType(TYPES['double']) #type added
+        size = getLastVariableDeclaredFromFunction('global').getTotalMemoryDimension()
+        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestDoubleMemory(size))
     else :
-        functionTable.getFunction(getLastFunction()).getVarTable().setVarType(getLastVariable(), TYPES['double']) #type added
+        getLastVariableDeclaredFromLastFunction().setType(TYPES['double']) #type added
+        size = getLastVariableDeclaredFromLastFunction().getTotalMemoryDimension()
+        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.requestDoubleMemory(size))
 
 #boolean declaration
 def p_boolean_declaration(p):
     'boolean_declaration :   variable_declared array boolean_assignation'
     if onGlobalScope() :
-        functionTable.getFunction('global').getVarTable().setVarType(getLastVariable(), TYPES['boolean']) #type added
+        getLastVariableDeclaredFromFunction('global').setType(TYPES['boolean']) #type added
+        size = getLastVariableDeclaredFromFunction('global').getTotalMemoryDimension()
+        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestBooleanMemory(size))
     else :
-        functionTable.getFunction(getLastFunction()).getVarTable().setVarType(getLastVariable(), TYPES['boolean']) #type added 
+        getLastVariableDeclaredFromLastFunction().setType(TYPES['boolean']) #type added
+        size = getLastVariableDeclaredFromLastFunction().getTotalMemoryDimension()
+        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.requestBooleanMemory(size))
 
 #variable declared. Extra to know a variable has been declared
 def p_variable_declared(p):
@@ -293,7 +310,9 @@ def p_param_declaration(p):
 def p_param_declared(p):
     '''param_declared :'''
     addVariableToLastFunction(p[-1])
-    functionTable.getFunction(getLastFunction()).getVarTable().setVarType(p[-1], TYPES[p[-2]]) #type added to first var or first argument
+    getVariableFromFunction(p[-1], getLastFunction()).setType(TYPES[p[-2]])#type added to var and argument
+    size = getVariableFromFunction(p[-1], getLastFunction()).getTotalMemoryDimension()
+    getVariableFromFunction(p[-1], getLastFunction()).setMemory(memoryManager.requestMemoryOfType(size, TYPES[p[-2]]))
     functionTable.getFunction(getLastFunction()).addParam() #param counter added
 
 #multiples params
@@ -445,6 +464,6 @@ for f in functionTable.getFunctionTable():
     print "function: %s has %s parameters and return type is %s" % (f, functionTable.getFunctionTable()[f].getNumParams(), functionTable.getFunctionTable()[f].getReturnType())
     print "the variables are :"
     for v in functionTable.getFunctionTable()[f].getVarTable().table:
-        print "var %s is %s and memory %s" % (v, functionTable.getFunctionTable()[f].getVarTable().table[v].getType(), functionTable.getFunctionTable()[f].getVarTable().table[v].getMemory())
+        print "var %s is %s and memory %s and size of %s" % (v, functionTable.getFunctionTable()[f].getVarTable().table[v].getType(), functionTable.getFunctionTable()[f].getVarTable().table[v].getMemory(), functionTable.getFunctionTable()[f].getVarTable().table[v].getTotalMemoryDimension())
 
 #print(FUNCTIONS['b'].getReturnType());

@@ -1,6 +1,7 @@
 ply/*
 .DS_Store
 *.pyc
+*.cp
 parsetab.py
 parser.out
-parser_test2.txt
+*.txt

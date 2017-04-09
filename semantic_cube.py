@@ -56,13 +56,13 @@ semantic_cube[TYPES['boolean']][operators['/']][TYPES['boolean']]        = -1
 #4 ==
 semantic_cube[TYPES['int']][operators['==']][TYPES['int']]                = TYPES['boolean']
 semantic_cube[TYPES['int']][operators['==']][TYPES['double']]             = TYPES['boolean']
-semantic_cube[TYPES['int']][operators['==']][TYPES['boolean']]            = TYPES['boolean']
+semantic_cube[TYPES['int']][operators['==']][TYPES['boolean']]            = -1
 semantic_cube[TYPES['double']][operators['==']][TYPES['int']]             = TYPES['boolean']
 semantic_cube[TYPES['double']][operators['==']][TYPES['double']]          = TYPES['boolean']
-semantic_cube[TYPES['double']][operators['==']][TYPES['boolean']]         = TYPES['boolean']
-semantic_cube[TYPES['boolean']][operators['==']][TYPES['int']]            = TYPES['boolean']
-semantic_cube[TYPES['boolean']][operators['==']][TYPES['double']]         = TYPES['boolean']
-semantic_cube[TYPES['boolean']][operators['==']][TYPES['boolean']]        = TYPES['boolean']
+semantic_cube[TYPES['double']][operators['==']][TYPES['boolean']]         = -1
+semantic_cube[TYPES['boolean']][operators['==']][TYPES['int']]            = -1
+semantic_cube[TYPES['boolean']][operators['==']][TYPES['double']]         = -1
+semantic_cube[TYPES['boolean']][operators['==']][TYPES['boolean']]        = -1
 #5 =
 semantic_cube[TYPES['int']][operators['=']][TYPES['int']]                = TYPES['int']
 semantic_cube[TYPES['int']][operators['=']][TYPES['double']]             = TYPES['int']
@@ -76,23 +76,23 @@ semantic_cube[TYPES['boolean']][operators['=']][TYPES['boolean']]        = TYPES
 #6 <
 semantic_cube[TYPES['int']][operators['<']][TYPES['int']]                  = TYPES['boolean']
 semantic_cube[TYPES['int']][operators['<']][TYPES['double']]               = TYPES['boolean']
-semantic_cube[TYPES['int']][operators['<']][TYPES['boolean']]              = TYPES['boolean']
+semantic_cube[TYPES['int']][operators['<']][TYPES['boolean']]              = -1
 semantic_cube[TYPES['double']][operators['<']][TYPES['int']]               = TYPES['boolean']
 semantic_cube[TYPES['double']][operators['<']][TYPES['double']]            = TYPES['boolean']
-semantic_cube[TYPES['double']][operators['<']][TYPES['boolean']]           = TYPES['boolean']
-semantic_cube[TYPES['boolean']][operators['<']][TYPES['int']]              = TYPES['boolean']
-semantic_cube[TYPES['boolean']][operators['<']][TYPES['double']]           = TYPES['boolean']
-semantic_cube[TYPES['boolean']][operators['<']][TYPES['boolean']]          = TYPES['boolean']
+semantic_cube[TYPES['double']][operators['<']][TYPES['boolean']]           = -1
+semantic_cube[TYPES['boolean']][operators['<']][TYPES['int']]              = -1
+semantic_cube[TYPES['boolean']][operators['<']][TYPES['double']]           = -1
+semantic_cube[TYPES['boolean']][operators['<']][TYPES['boolean']]          = -1
 #7 >
 semantic_cube[TYPES['int']][operators['>']][TYPES['int']]               = TYPES['boolean']
 semantic_cube[TYPES['int']][operators['>']][TYPES['double']]            = TYPES['boolean']
-semantic_cube[TYPES['int']][operators['>']][TYPES['boolean']]           = TYPES['boolean']
+semantic_cube[TYPES['int']][operators['>']][TYPES['boolean']]           = -1
 semantic_cube[TYPES['double']][operators['>']][TYPES['int']]            = TYPES['boolean']
 semantic_cube[TYPES['double']][operators['>']][TYPES['double']]         = TYPES['boolean']
-semantic_cube[TYPES['double']][operators['>']][TYPES['boolean']]        = TYPES['boolean']
-semantic_cube[TYPES['boolean']][operators['>']][TYPES['int']]           = TYPES['boolean']
-semantic_cube[TYPES['boolean']][operators['>']][TYPES['double']]        = TYPES['boolean']
-semantic_cube[TYPES['boolean']][operators['>']][TYPES['boolean']]       = TYPES['boolean']
+semantic_cube[TYPES['double']][operators['>']][TYPES['boolean']]        = -1
+semantic_cube[TYPES['boolean']][operators['>']][TYPES['int']]           = -1
+semantic_cube[TYPES['boolean']][operators['>']][TYPES['double']]        = -1
+semantic_cube[TYPES['boolean']][operators['>']][TYPES['boolean']]       = -1
 #8 &
 semantic_cube[TYPES['int']][operators['&']][TYPES['int']]                   = TYPES['boolean']
 semantic_cube[TYPES['int']][operators['&']][TYPES['double']]                = TYPES['boolean']

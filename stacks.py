@@ -8,10 +8,13 @@ operandsStack = [] #operands stack for quadruples
 operatorsStack = []#operators stack for quadruples
 typesStack = [] #types stack for quadruples
 
+jumpStack = [] #jump stack
+
 #temporal counter. only for testing purposes
 temporalCounter = 1
 
 FALSE_BOTTOM = '?'
+JUMP_SPACE = '_'
 
 #function to lookup the last element on operator stack
 def lookOperatorStack():
@@ -38,7 +41,7 @@ def isSameOrder(operator):
     if operator == '==' or operator == '>' or operator == '<':
         return isLastOperator('==') or isLastOperator('>') or isLastOperator('<')
     if operator == '&' or operator == '|':
-        return isLastOperator('&') or isLastOperator('|') 
+        return isLastOperator('&') or isLastOperator('|')
     return None #error. Bad operator given
 
 def getLastOperand():

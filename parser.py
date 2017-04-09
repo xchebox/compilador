@@ -78,17 +78,25 @@ def generateOperatorNextQuadruple(operator):
 
 #generates an assignation quadruple. Var is the variable that is going to be assigned
 def generateAsignationNextQuadruple(var, varType):
-    resultType = semantic_cube[getLastType()][operators['=']][varType]
+    resultType = semantic_cube[typesStack.pop()][operators['=']][varType]
     if  resultType != -1 : #can do operator
-        quadrupleManager.addQuadruple(operators['='], getLastOperand(), ' ', var)
-        typesStack.pop()
-        operandsStack.pop()
+        quadrupleManager.addQuadruple(operators['='], operandsStack.pop(), ' ', var)
         return 1
     else :
         return 0
 
     return -1
 
+#generates gotof quadruple
+def generateGotoFQuadruple():
+    quadrupleManager.addQuadruple(operators['gotoF'], operandsStack.pop(), ' ', JUMP_SPACE)#TODO decide what to do with goto operator code
+    jumpStack.append(quadrupleManager.getCounter() - 1)#adds position to jumpStack
+
+#generates goto quadruple
+def generateGotoQuadruple():
+    quadrupleManager.addQuadruple(operators['goto'], ' ', ' ', JUMP_SPACE)#TODO decide what to do with goto operator code
+    quadrupleManager.fillQuadrupleJump(jumpStack.pop(), quadrupleManager.getCounter())
+    jumpStack.append(quadrupleManager.getCounter() - 1)#adds position to jumpStack
 
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
@@ -518,12 +526,31 @@ def p_statute(p):
 
 #if
 def p_if_statute(p):
-    '''if_statute :       IF LPAREN expression RPAREN LBRACE statute RBRACE else'''
+    '''if_statute :       IF LPAREN expression RPAREN then LBRACE statute RBRACE else'''
+    #fills the last jumpStack
+    quadrupleManager.fillQuadrupleJump(jumpStack.pop(), quadrupleManager.getCounter())
+
+#then. Means the expression has been resolved/executed
+def p_then(p):
+    'then :          '
+    if typesStack.pop() != TYPES['boolean']:
+        error('Semantic error')
+    else:
+        #actual boolean expression
+        generateGotoFQuadruple()
+
 
 #else
 def p_else(p):
-    '''else :     ELSE LBRACE statute RBRACE
+    '''else :     ELSE else_then LBRACE statute RBRACE
                 | empty'''
+
+#else used
+def p_else_then(p):
+    'else_then :        '
+    generateGotoQuadruple()
+
+
 
 
 #while
@@ -645,6 +672,9 @@ for f in functionTable.getFunctionTable():
 print "Quadruples"
 
 for q in quadrupleManager.quadrupleStack:
-    print "%s %s %s %s" % (operators.keys()[operators.values().index(q.operator)], q.firstOperand, q.secondOperand, q.result)
+    print "%s-- %s %s %s %s" % (quadrupleManager.quadrupleStack.index(q), operators.keys()[operators.values().index(q.operator)], q.firstOperand, q.secondOperand, q.result)
+
+for q in quadrupleManager.quadrupleStack:
+    print ' '
 
 #print(FUNCTIONS['b'].getReturnType());

@@ -98,6 +98,12 @@ def generateGotoQuadruple():
     quadrupleManager.fillQuadrupleJump(jumpStack.pop(), quadrupleManager.getCounter())
     jumpStack.append(quadrupleManager.getCounter() - 1)#adds position to jumpStack
 
+#generates goto while quadruple
+def generateWhileGotoQuadruple():
+    jumptToFalse = jumpStack.pop()
+    quadrupleManager.addQuadruple(operators['goto'], ' ', ' ', jumpStack.pop())#TODO decide what to do with goto operator code
+    quadrupleManager.fillQuadrupleJump(jumptToFalse, quadrupleManager.getCounter())
+
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
 
@@ -219,18 +225,18 @@ def p_function(p):
     if p[1] == '(':
         #checks functions exists
         if not functionExists( p[-1] ):
-            error('function ' + p[-1] + ' not declared')
+            error('function ' + p[-1] + ' not declared on line', p.lineno(1))
     else :
         if onGlobalScope() :
             if not varExistsOnFunction(p[-1], 'global'):
-                error('var '+p[-1]+' not defined')
+                error('var '+p[-1]+' not defined on line', p.lineno(1))
             else:
                 typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
                 operandsStack.append(p[-1])
         else : #function scope
             if not varExistsOnFunction(p[-1], getLastFunction()):# var not declared on local
                 if not varExistsOnFunction(p[-1], 'global'): #var not declared on global
-                    error('var '+p[-1]+' not defined')
+                    error('var '+p[-1]+' not defined on line', p.lineno(1))
                 else : #var used from global scope
                     typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
                     operandsStack.append(p[-1])
@@ -257,11 +263,11 @@ def p_int_assignation(p):
     if p[1] == '=':
         if onGlobalScope():
             if generateAsignationNextQuadruple(getLastVariable(), TYPES['int']) == 0:
-                error("Type mismatch")
+                error("Type mismatch on line", p.lineno(1))
             #TODO change into memory using globla or local scope
         else :
             if generateAsignationNextQuadruple(getLastVariable(), TYPES['int']) == 0:
-                error("Type mismatch")
+                error("Type mismatch on line", p.lineno(1))
 
 #assignation of a double variable
 def p_double_assignation(p):
@@ -270,11 +276,11 @@ def p_double_assignation(p):
     if p[1] == '=':
         if onGlobalScope():
             if generateAsignationNextQuadruple(getLastVariable(), TYPES['double']) == 0:
-                error("Type mismatch")
+                error("Type mismatch on line", p.lineno(1))
             #TODO change into memory using globla or local scope
         else :
             if generateAsignationNextQuadruple(getLastVariable(), TYPES['double']) == 0:
-                error("Type mismatch")
+                error("Type mismatch on line", p.lineno(1))
 
 
 #assignation of a boolean variable
@@ -293,23 +299,23 @@ def p_assignation_statute(p):
     '''assignation_statute : ID array_u ASSIGN expression SEMICOLON'''
     if onGlobalScope():
         if not varExistsOnFunction(p[1], 'global'):
-            error('variable '+p[1]+ ' not declared')
+            error('variable '+p[1]+ ' not declared on line', p.lineno(1))
         else :
             # add info into from global scope
             if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],'global').getType()) == 0:
-                error('Type mismatch')
+                error('Type mismatch on line', p.lineno(1))
     else :
         if not varExistsOnFunction(p[1], getLastFunction()):
             if not varExistsOnFunction(p[1], 'global'):
-                error('variable '+p[1]+ ' not declared')
+                error('variable '+p[1]+ ' not declared on line', p.lineno(1))
             else :
                 # add info into from global scope
                 if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],'global').getType()) == 0:
-                    error('Type mismatch')
+                    error('Type mismatch on line', p.lineno(1))
         else :
             # add into info from local scope
             if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],getLastFunction()).getType()) == 0:
-                error('Type mismatch')
+                error('Type mismatch on line ', p.lineno(1))
 
 
 
@@ -337,7 +343,7 @@ def p_logical_used(p):
 def p_logical_after_term(p):
     'logical_after_term :  '
     if generateOperatorNextQuadruple('&') == 0:
-        error('type mismatch')
+        error('type mismatch on line ',p.lineno(0))
 
 #relational
 def p_relational(p):
@@ -359,7 +365,7 @@ def p_relational_used(p):
 def p_relational_after_term(p):
     'relational_after_term :  '
     if generateOperatorNextQuadruple('==') == 0:
-        error('type mismatch')
+        error('type mismatch on line', p.lineno(0))
 
 
 #sum
@@ -381,7 +387,7 @@ def p_sum_used(p):
 def p_sum_after_term(p):
     'sum_after_term :  '
     if generateOperatorNextQuadruple('+') == 0:
-        error('type mismatch')
+        error('type mismatch on line', p.lineno(0))
 
 #multiplication
 def p_mult(p):
@@ -402,7 +408,7 @@ def p_mult_used(p):
 def p_mult_after_term(p):
     'mult_after_term :  '
     if generateOperatorNextQuadruple('*') == 0:
-        error('type mismatch')
+        error('type mismatch on line ', p.lineno(0))
 
 #atomic element for expression
 def p_term(p):
@@ -469,7 +475,7 @@ def p_return_declared(p):
 def p_function_declared(p):
     '''function_declared :'''
     if functionExists(p[-1]):
-        error("Function "+p[-1]+" already declared")
+        error("Function "+p[-1]+" already declared on line ",p.lineno(0))
     else :
         fStack.append(p[-1])#function name added to function stack
         functionTable.addFunction(p[-1])#function added to func table
@@ -534,7 +540,7 @@ def p_if_statute(p):
 def p_then(p):
     'then :          '
     if typesStack.pop() != TYPES['boolean']:
-        error('Semantic error')
+        error('Semantic error on if statute on line ', p.lineno(0))
     else:
         #actual boolean expression
         generateGotoFQuadruple()
@@ -555,7 +561,24 @@ def p_else_then(p):
 
 #while
 def p_while_statute(p):
-    '''while_statute :      WHILE LPAREN expression RPAREN LBRACE statute RBRACE '''
+    '''while_statute :      WHILE while_declared LPAREN expression RPAREN while_then LBRACE statute RBRACE '''
+    #fills the last jumpStack
+    generateWhileGotoQuadruple()
+
+#when declared and started
+def p_when_declared(p):
+    'while_declared :           '
+    jumpStack.append(quadrupleManager.getCounter())
+
+#after boolean expression
+def p_while_then(p):
+    'while_then :            '
+    if typesStack.pop() != TYPES['boolean']:
+        error('Semantic error on while statute on line ',p.lineno(0))
+    else :
+        generateGotoFQuadruple()
+
+
 
 #do while statute
 def p_do_while(p):
@@ -571,7 +594,7 @@ def p_function_statute(p):
     '''function_statute :   ID LPAREN params RPAREN SEMICOLON'''
     #checks functions exists
     if not functionExists( p[1] ):
-        error('function ' + p[1] + ' not declared');
+        error('function ' + p[1] + ' not declared on line ', p.lineno(1));
 
 #comment statute
 def p_comment_statute(p):

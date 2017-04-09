@@ -76,6 +76,20 @@ def generateOperatorNextQuadruple(operator):
                 return 0
     return -1
 
+#generates an assignation quadruple. Var is the variable that is going to be assigned
+def generateAsignationNextQuadruple(var, varType):
+    resultType = semantic_cube[getLastType()][operators['=']][varType]
+    if  resultType != -1 : #can do operator
+        quadrupleManager.addQuadruple(operators['='], getLastOperand(), ' ', var)
+        typesStack.pop()
+        operandsStack.pop()
+        return 1
+    else :
+        return 0
+
+    return -1
+
+
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
 
@@ -232,21 +246,64 @@ def p_mult_params(p):
 def p_int_assignation(p):
     '''int_assignation :      ASSIGN expression
                             | empty'''
+    if p[1] == '=':
+        if onGlobalScope():
+            if generateAsignationNextQuadruple(getLastVariable(), TYPES['int']) == 0:
+                error("Type mismatch")
+            #TODO change into memory using globla or local scope
+        else :
+            if generateAsignationNextQuadruple(getLastVariable(), TYPES['int']) == 0:
+                error("Type mismatch")
 
 #assignation of a double variable
 def p_double_assignation(p):
     '''double_assignation :   ASSIGN expression
                             | empty'''
+    if p[1] == '=':
+        if onGlobalScope():
+            if generateAsignationNextQuadruple(getLastVariable(), TYPES['double']) == 0:
+                error("Type mismatch")
+            #TODO change into memory using globla or local scope
+        else :
+            if generateAsignationNextQuadruple(getLastVariable(), TYPES['double']) == 0:
+                error("Type mismatch")
 
 
 #assignation of a boolean variable
 def p_boolean_assignation(p):
     '''boolean_assignation :  ASSIGN expression
                             | empty'''
+    if p[1] == '=':
+        if onGlobalScope():
+            generateAsignationNextQuadruple(getLastVariable(), TYPES['boolean'])
+            #TODO change into memory using globla or local scope
+        else :
+            generateAsignationNextQuadruple(getLastVariable(), TYPES['boolean'])
 
 #unknown variable assignation
 def p_assignation_statute(p):
     '''assignation_statute : ID array_u ASSIGN expression SEMICOLON'''
+    if onGlobalScope():
+        if not varExistsOnFunction(p[1], 'global'):
+            error('variable '+p[1]+ ' not declared')
+        else :
+            # add info into from global scope
+            if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],'global').getType()) == 0:
+                error('Type mismatch')
+    else :
+        if not varExistsOnFunction(p[1], getLastFunction()):
+            if not varExistsOnFunction(p[1], 'global'):
+                error('variable '+p[1]+ ' not declared')
+            else :
+                # add info into from global scope
+                if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],'global').getType()) == 0:
+                    error('Type mismatch')
+        else :
+            # add into info from local scope
+            if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],getLastFunction()).getType()) == 0:
+                error('Type mismatch')
+
+
 
 
 #expression

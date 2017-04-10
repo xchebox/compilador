@@ -14,18 +14,13 @@ class VarTable:
         self.table[id] = Variable(varMemory, var_type)
 
     def setVarType(self, var, var_type = None):
-        varMemory = 0
         if var_type == TYPES['int']:
-            varMemory = self.iCounter
             self.iCounter += 1
         if var_type == TYPES['double']:
-            varMemory = self.dCounter
             self.dCounter += 1
         if var_type == TYPES['boolean']:
-            varMemory = self.bCounter
             self.bCounter += 1
         self.table[var].setType(var_type)
-        self.table[var].setMemory(varMemory)
 
 
 
@@ -53,6 +48,14 @@ class Variable:
 
     def addDimension(self, newDimension):
         self.dimension.append(newDimension)
+
+    def getTotalMemoryDimension(self):
+        if len (self.dimension) == 0:
+            return 1
+        if len (self.dimension ) == 1:
+            return self.dimension[0]
+        totalMemory = reduce( lambda x, y: x*y, self.dimension)
+        return totalMemory
 
     def getDimension(self):
         return self.dimension

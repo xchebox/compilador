@@ -28,34 +28,44 @@ class MemoryManager:
         self.pointerStack = {}
 
 
-        #different memory requests
-        def requestIntMemory(self, memoryToRequest):
-            memoryToReturn = 0
-            self.integerMemoryRequested += memoryToRequest
-            if self.integerMemoryRequested > integerMaxSize:
-                print "Memory stack overflow"
-            return memoryToReturn
+    def requestMemoryOfType(self, memoryToRequest, type):
+        if type == TYPES['int']:
+            return self.requestIntMemory(memoryToRequest)
+        elif type == TYPES['double']:
+            return self.requestDoubleMemory(memoryToRequest)
+        elif type == TYPES['boolean']:
+            return self.requestBooleanMemory(memoryToRequest)
+        else: #pointer required
+            return self.requestPointerMemory(memoryToRequest)
 
-        #different memory requests
-        def requestDoubleMemory(self, memoryToRequest):
-            memoryToReturn = 0
-            self.doubleMemoryRequested += memoryToRequest
-            if self.doubleMemoryRequested > doubleMaxSize:
-                print "Memory stack overflow"
-            return memoryToReturn
+    #different memory requests
+    def requestIntMemory(self, memoryToRequest):
+        memoryToReturn = self.integerMemoryRequested
+        self.integerMemoryRequested += memoryToRequest
+        if self.integerMemoryRequested > self.integerMaxSize:
+            print "Memory stack overflow"
+        return memoryToReturn
 
-        #different memory requests
-        def requestIntMemory(self, memoryToRequest):
-            memoryToReturn = 0
-            self.booleanMemoryRequested += memoryToRequest
-            if self.booleanMemoryRequested > booleanMaxSize:
-                print "Memory stack overflow"
-            return memoryToReturn
+    #different memory requests
+    def requestDoubleMemory(self, memoryToRequest):
+        memoryToReturn = self.doubleMemoryRequested
+        self.doubleMemoryRequested += memoryToRequest
+        if self.doubleMemoryRequested > self.doubleMaxSize:
+            print "Memory stack overflow"
+        return memoryToReturn
 
-        #different memory requests
-        def requestIntMemory(self, memoryToRequest):
-            memoryToReturn = 0
-            self.pointerMemoryRequested += memoryToRequest
-            if self.pointerMemoryRequested > pointerMaxSize:
-                print "Memory stack overflow"
-            return memoryToReturn
+    #different memory requests
+    def requestBooleanMemory(self, memoryToRequest):
+        memoryToReturn = self.booleanMemoryRequested
+        self.booleanMemoryRequested += memoryToRequest
+        if self.booleanMemoryRequested > self.booleanMaxSize:
+            print "Memory stack overflow"
+        return memoryToReturn
+
+    #different memory requests
+    def requestPointerMemory(self, memoryToRequest):
+        memoryToReturn = self.pointerMemoryRequested
+        self.pointerMemoryRequested += memoryToRequest
+        if self.pointerMemoryRequested > self.pointerMaxSize:
+            print "Memory stack overflow"
+        return memoryToReturn

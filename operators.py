@@ -12,5 +12,6 @@ operators = {
     'goto'      : 10,
     'gotoF'     : 11,
     'gotoT'     : 12,
+    'return'    : 13
 
 }

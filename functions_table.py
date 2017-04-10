@@ -25,6 +25,13 @@ class Function():
         self.num_params = num_params
         self.return_type = return_type
         self.var_table = VarTable()
+        self.firstQuadruple = 0
+
+    def setFirstQuadruple(self, quadruple):
+        self.firstQuadruple = quadruple
+
+    def getFirstQuadruple(self):
+        return self.firstQuadruple
 
     def addParam(self):
         self.num_params += 1

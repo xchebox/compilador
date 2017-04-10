@@ -104,6 +104,10 @@ def generateWhileGotoQuadruple():
     quadrupleManager.addQuadruple(operators['goto'], ' ', ' ', jumpStack.pop())#TODO decide what to do with goto operator code
     quadrupleManager.fillQuadrupleJump(jumptToFalse, quadrupleManager.getCounter())
 
+#generates gotoT while quadruple
+def generateDoWhileGotoTQuadruple():
+    quadrupleManager.addQuadruple(operators['gotoT'], operandsStack.pop(), ' ', jumpStack.pop())#TODO decide what to do with goto operator code
+
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
 
@@ -225,18 +229,18 @@ def p_function(p):
     if p[1] == '(':
         #checks functions exists
         if not functionExists( p[-1] ):
-            error('function ' + p[-1] + ' not declared on line', p.lineno(1))
+            error('function ' + p[-1] + ' not declared on line', p.lineno(-1))
     else :
         if onGlobalScope() :
             if not varExistsOnFunction(p[-1], 'global'):
-                error('var '+p[-1]+' not defined on line', p.lineno(1))
+                error('var '+p[-1]+' not defined on line', p.lineno(-1))
             else:
                 typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
                 operandsStack.append(p[-1])
         else : #function scope
             if not varExistsOnFunction(p[-1], getLastFunction()):# var not declared on local
                 if not varExistsOnFunction(p[-1], 'global'): #var not declared on global
-                    error('var '+p[-1]+' not defined on line', p.lineno(1))
+                    error('var '+p[-1]+' not defined on line', p.lineno(-1))
                 else : #var used from global scope
                     typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
                     operandsStack.append(p[-1])
@@ -427,7 +431,7 @@ def p_term_int_used(p):
     'term_int_used :     '
     global temporalCounter
     operandsStack.append('t'+`temporalCounter`)
-    temporalCounter += 1
+    #temporalCounter += 1
     #type added to stack
     typesStack.append(TYPES['int'])
 
@@ -582,7 +586,14 @@ def p_while_then(p):
 
 #do while statute
 def p_do_while(p):
-    '''do_while_statute :   DO LBRACE statute RBRACE WHILE LPAREN expression RPAREN'''
+    '''do_while_statute :   DO do_while_then LBRACE statute RBRACE WHILE LPAREN expression RPAREN'''
+    if typesStack.pop() == TYPES['boolean']:
+        generateDoWhileGotoTQuadruple()
+
+#do while then
+def p_do_while_then(p):
+    'do_while_then :        '
+    jumpStack.append(quadrupleManager.getCounter())
 
 #return statement
 def p_return_statute(p):
@@ -683,7 +694,7 @@ parser.defaulted_states = {};
 
 #test
 
-file = open("parser_test.txt", "r")
+file = open("parse_test_cycles.txt", "r")
 parser.parse( file.read() )
 
 for f in functionTable.getFunctionTable():

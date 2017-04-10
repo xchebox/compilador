@@ -422,7 +422,7 @@ def p_term(p):
                     | ID function
                     | LPAREN term_parenthesis_used expression RPAREN'''
     #remove false bottom
-    if p[1] == '(': #TODO check if works properly
+    if p[1] == '(': #TODO check if works properly.... it seems so
         operatorsStack.pop()
 
 
@@ -431,7 +431,7 @@ def p_term_int_used(p):
     'term_int_used :     '
     global temporalCounter
     operandsStack.append('t'+`temporalCounter`)
-    #temporalCounter += 1
+    temporalCounter += 1#TODO remember to change temporal on constants. constants do not generate temmporal
     #type added to stack
     typesStack.append(TYPES['int'])
 
@@ -694,7 +694,8 @@ parser.defaulted_states = {};
 
 #test
 
-file = open("parse_test_cycles.txt", "r")
+#file = open("parse_test_cycles.txt", "r")
+file = open("parser_test.txt", "r")
 parser.parse( file.read() )
 
 for f in functionTable.getFunctionTable():

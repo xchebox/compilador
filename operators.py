@@ -12,6 +12,9 @@ operators = {
     'goto'      : 10,
     'gotoF'     : 11,
     'gotoT'     : 12,
-    'return'    : 13
+    'return'    : 13,
+    'era'       : 14,
+    'goSub'     : 15,
+    'param'     : 16
 
 }

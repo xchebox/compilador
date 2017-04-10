@@ -108,6 +108,10 @@ def generateWhileGotoQuadruple():
 def generateDoWhileGotoTQuadruple():
     quadrupleManager.addQuadruple(operators['gotoT'], operandsStack.pop(), ' ', jumpStack.pop())#TODO decide what to do with goto operator code
 
+#function to generate a new return quadruple
+def generateReturnQuadruple():
+    quadrupleManager.addQuadruple(operators['return'], ' ', ' ', ' ')
+
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
 
@@ -326,7 +330,13 @@ def p_assignation_statute(p):
 
 #expression
 def p_expression(p):
-    '''expression :     logical '''
+    '''expression :     clean_expressions logical '''
+
+#used to clear the stack. In theory before a new expression is called the older values are useless
+def p_clean_expressions(p):
+    'clean_expressions :        '
+    del operandsStack[:]#TODO handle this. Is basic just for the return statement
+    del typesStack[:]
 
 #logic
 def p_logical(p):
@@ -462,18 +472,18 @@ def p_term_parenthesis_used(p):
 
 #function
 def p_function_declaration(p):
-    '''function_declaration :     function_header function_main
+    '''function_declaration :     function_header function_main function_declaration
                                 | empty'''
 
 #function declaration
 def p_function_header(p):
-    '''function_header :   FUNCTION  return_declared LPAREN params_declaration RPAREN'''
+    '''function_header :   FUNCTION  return_type_declared LPAREN params_declaration RPAREN'''
 
 #called after return statement declared
-def p_return_declared(p):
-    '''return_declared :    DOUBLE ID  function_declared
-                            | INT ID  function_declared
-                            | BOOLEAN ID  function_declared'''
+def p_return_type_declared(p):
+    '''return_type_declared :    DOUBLE ID  function_declared
+                                | INT ID  function_declared
+                                | BOOLEAN ID  function_declared'''
 
 #function declared. Used to know when a function has been declared
 def p_function_declared(p):
@@ -487,7 +497,15 @@ def p_function_declared(p):
 
 #function main
 def p_function_main(p):
-    '''function_main :   LBRACE  statute return_statute RBRACE function_declaration'''
+    '''function_main :   LBRACE  function_main_started statute return_statute RBRACE'''
+    #function finished
+
+
+
+def p_function_main_started(p):
+    'function_main_started :        '
+    functionTable.getFunction(getLastFunction()).setFirstQuadruple(quadrupleManager.getCounter())
+
 
 #params declaration
 def p_params_declaration(p):
@@ -598,7 +616,11 @@ def p_do_while_then(p):
 #return statement
 def p_return_statute(p):
     '''return_statute :   RETURN expression SEMICOLON'''
+    generateReturnQuadruple()
+    typesStack.pop()
+
     fStack.pop()# function defined so we remove it from the stack
+    #TODO release memory after return
 
 #function statute
 def p_function_statute(p):
@@ -699,10 +721,11 @@ file = open("parser_test.txt", "r")
 parser.parse( file.read() )
 
 for f in functionTable.getFunctionTable():
-    print "function: %s has %s parameters and return type is %s" % (f, functionTable.getFunctionTable()[f].getNumParams(), functionTable.getFunctionTable()[f].getReturnType())
+    print "function: %s has %s parameters and return type is %s. It starts on %s quadruple" % (f, functionTable.getFunctionTable()[f].getNumParams(), functionTable.getFunctionTable()[f].getReturnType(), functionTable.getFunctionTable()[f].getFirstQuadruple())
     print "the variables are :"
     for v in functionTable.getFunctionTable()[f].getVarTable().table:
         print "var %s is %s and memory %s and size of %s" % (v, functionTable.getFunctionTable()[f].getVarTable().table[v].getType(), functionTable.getFunctionTable()[f].getVarTable().table[v].getMemory(), functionTable.getFunctionTable()[f].getVarTable().table[v].getTotalMemoryDimension())
+    print '\n'
 
 print "Quadruples"
 

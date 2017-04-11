@@ -54,7 +54,7 @@ def writeSummary():
 def writeQuadruples():
     quadruple = open("./out/quadruple.cp", "w")
     for q in quadrupleManager.quadrupleStack:
-        quadruple.write ("%s-- %s %s %s %s" % (quadrupleManager.quadrupleStack.index(q), operators.keys()[operators.values().index(q.operator)], q.firstOperand, q.secondOperand, q.result))
+        quadruple.write ("%s %s %s %s\n" % (q.operator, q.firstOperand, q.secondOperand, q.result))
 
 def printQuadruples():
     print "Quadruples"
@@ -850,3 +850,5 @@ parser.parse( file.read() )
 
 printSummary()
 printQuadruples()
+
+writeQuadruples()

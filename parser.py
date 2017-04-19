@@ -7,6 +7,7 @@ from functions_table import *
 from stacks import *
 #from memory import MemoryManager
 from quadruple import QuadrupleManager
+from virtual_machine import VirtualMachine
 
 
 #generates new function table
@@ -54,7 +55,7 @@ def writeSummary():
 def writeQuadruples():
     quadruple = open("./out/quadruple.cp", "w")
     for q in quadrupleManager.quadrupleStack:
-        quadruple.write ("%s %s %s %s\n" % (q.operator, q.firstOperand, q.secondOperand, q.result))
+        quadruple.write ("%s,%s,%s,%s\n" % (q.operator, q.firstOperand, q.secondOperand, q.result))
 
 def printQuadruples():
     print "Quadruples"
@@ -894,3 +895,7 @@ printSummary()
 printQuadruples()
 
 writeQuadruples()
+
+vM = VirtualMachine()
+
+vM.loadProgram()

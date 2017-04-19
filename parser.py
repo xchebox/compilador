@@ -5,7 +5,7 @@ from semantic_cube import TYPES, semantic_cube
 from operators import operators
 from functions_table import *
 from stacks import *
-from memory import MemoryManager
+#from memory import MemoryManager
 from quadruple import QuadrupleManager
 
 
@@ -16,7 +16,7 @@ functionTable = FunctionTable()
 quadrupleManager = QuadrupleManager()
 
 #MemoryManager
-memoryManager = MemoryManager()
+#memoryManager = MemoryManager()
 
 #checs if on global scope
 def onGlobalScope():
@@ -128,7 +128,16 @@ def generateOperatorNextQuadruple(operator):
                         functionTable.getFunction(getLastFunction()).increaseDoubleMemoryRequired(1)#result always increments one by one
                     elif getLastType() == TYPES['boolean']:
                         functionTable.getFunction(getLastFunction()).increaseBooleanMemoryRequired(1)#result always increments one by one
-                return 1
+                    return 1
+
+                else: # on global scope
+                    if getLastType() == TYPES['int']:
+                        functionTable.getFunction('global').increaseIntMemoryRequired(1)#result always increments one by one
+                    elif getLastType() == TYPES['double']:
+                        functionTable.getFunction('global').increaseDoubleMemoryRequired(1)#result always increments one by one
+                    elif getLastType() == TYPES['boolean']:
+                        functionTable.getFunction('global').increaseBooleanMemoryRequired(1)#result always increments one by one
+                    return 1
             else :
                 return 0
     return -1
@@ -229,41 +238,55 @@ def p_declaration_statute(p):
 def p_int_declaration(p):#TODO check if add memory counter to global and main
     'int_declaration :   variable_declared array int_assignation'
     if onGlobalScope() :
+        g = functionTable.getFunction('global')
         getLastVariableDeclaredFromFunction('global').setType(TYPES['int']) #type added
         size = getLastVariableDeclaredFromFunction('global').getTotalMemoryDimension()
-        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestIntMemory(size))
+        #getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestIntMemory(size)) TODO delete this
+        getLastVariableDeclaredFromFunction('global').setMemory(g.getIntMemoryRequired())
+        g.increaseIntMemoryRequired(size)
     else :
+        lastFunction = functionTable.getFunction(getLastFunction())
         getLastVariableDeclaredFromLastFunction().setType(TYPES['int']) #type added
         size = getLastVariableDeclaredFromLastFunction().getTotalMemoryDimension()
-        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.requestIntMemory(size))
-        functionTable.getFunction(getLastFunction()).increaseIntMemoryRequired(size)
+        #getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.requestIntMemory(size)) TODO delete this
+        getLastVariableDeclaredFromLastFunction().setMemory(lastFunction.getIntMemoryRequired())
+        lastFunction.increaseIntMemoryRequired(size)
 
 
 #double declaration
 def p_double_declaration(p):
     'double_declaration :   variable_declared array double_assignation'
     if onGlobalScope() :
+        g = functionTable.getFunction('global')
         getLastVariableDeclaredFromFunction('global').setType(TYPES['double']) #type added
         size = getLastVariableDeclaredFromFunction('global').getTotalMemoryDimension()
-        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestDoubleMemory(size))
+        #getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestDoubleMemory(size))
+        getLastVariableDeclaredFromFunction('global').setMemory(g.getDoubleMemoryRequired())
+        g.increaseDoubleMemoryRequired(size)
     else :
+        lastFunction = functionTable.getFunction(getLastFunction())
         getLastVariableDeclaredFromLastFunction().setType(TYPES['double']) #type added
         size = getLastVariableDeclaredFromLastFunction().getTotalMemoryDimension()
-        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.requestDoubleMemory(size))
-        functionTable.getFunction(getLastFunction()).increaseDoubleMemoryRequired(size)
+        getLastVariableDeclaredFromLastFunction().setMemory(lastFunction.getDoubleMemoryRequired())
+        lastFunction.increaseDoubleMemoryRequired(size)
 
 #boolean declaration
 def p_boolean_declaration(p):
     'boolean_declaration :   variable_declared array boolean_assignation'
     if onGlobalScope() :
+        g = functionTable.getFunction('global')
         getLastVariableDeclaredFromFunction('global').setType(TYPES['boolean']) #type added
         size = getLastVariableDeclaredFromFunction('global').getTotalMemoryDimension()
-        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestBooleanMemory(size))
+        #getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestBooleanMemory(size))
+        getLastVariableDeclaredFromFunction('global').setMemory(g.getBooleanMemoryRequired())
+        g.increaseBooleanMemoryRequired(size)
     else :
+        lastFunction = functionTable.getFunction(getLastFunction())
         getLastVariableDeclaredFromLastFunction().setType(TYPES['boolean']) #type added
         size = getLastVariableDeclaredFromLastFunction().getTotalMemoryDimension()
-        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.requestBooleanMemory(size))
-        functionTable.getFunction(getLastFunction()).increaseBooleanMemoryRequired(size)
+        #getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.requestBooleanMemory(size))
+        getLastVariableDeclaredFromLastFunction().setMemory(lastFunction.getBooleanMemoryRequired())
+        lastFunction.increaseBooleanMemoryRequired(size)
 
 #variable declared. Extra to know a variable has been declared
 def p_variable_declared(p):
@@ -640,17 +663,21 @@ def p_param_declaration(p):
 #param declared. Used to know when a param has been declared
 def p_param_declared(p):
     '''param_declared :'''
+    lastFunction = functionTable.getFunction(getLastFunction())
     addVariableToLastFunction(p[-1])
     getVariableFromFunction(p[-1], getLastFunction()).setType(TYPES[p[-2]])#type added to var and argument
     size = getVariableFromFunction(p[-1], getLastFunction()).getTotalMemoryDimension()
-    getVariableFromFunction(p[-1], getLastFunction()).setMemory(memoryManager.requestMemoryOfType(size, TYPES[p[-2]]))
+    #getVariableFromFunction(p[-1], getLastFunction()).setMemory(memoryManager.requestMemoryOfType(size, TYPES[p[-2]]))
     functionTable.getFunction(getLastFunction()).addParam(p[-1]) #param counter added
     if TYPES[p[-2]] == TYPES['int']: # is an integer
-        functionTable.getFunction(getLastFunction()).increaseIntMemoryRequired(size)
+        getVariableFromFunction(p[-1], getLastFunction()).setMemory(lastFunction.getIntMemoryRequired())
+        lastFunction.increaseIntMemoryRequired(size)
     elif TYPES[p[-2]] == TYPES['double']: # is a double
-        functionTable.getFunction(getLastFunction()).increaseDoubleMemoryRequired(size)
+        getVariableFromFunction(p[-1], getLastFunction()).setMemory(lastFunction.getDoubleMemoryRequired())
+        lastFunction.increaseDoubleMemoryRequired(size)
     elif TYPES[p[-2]] == TYPES['boolean']: # is a boolean
-        functionTable.getFunction(getLastFunction()).increaseBooleanMemoryRequired(size)
+        getVariableFromFunction(p[-1], getLastFunction()).setMemory(lastFunction.getBooleanMemoryRequired())
+        lastFunction.increaseBooleanMemoryRequired(size)
     else :
         error('internal error')
         #an error occurred

@@ -101,42 +101,61 @@ def generateGoToMain():
 
 #used to generates quadruple. A common function used by the different operators
 def generateOperatorNextQuadruple(operator):
-    global temporalCounter
+    #global temporalCounter
     if isSameOrder(operator):#last operator in stack is a mult
         if not getPenultimateType() is None:
-            resultType = semantic_cube[getLastType()][lookOperatorStack()][getPenultimateType()]
-            if  resultType != -1 : #can do operator
-                result = quadrupleManager.addQuadruple(lookOperatorStack(), getPenultimateOperand(), getLastOperand(), 't'+`temporalCounter`)
-                temporalCounter += 1
-                #remove last operator
-                operatorsStack.pop()
-                #remove operands used
-                operandsStack.pop()
-                operandsStack.pop()#TODO change to pop and not looknext
-                #remove types used
-                typesStack.pop()
-                typesStack.pop()
-                #add result to stack
-                operandsStack.append(result)
+            #remove last operator
+            operator = operatorsStack.pop()
+            #last operand
+            lastOpe = operandsStack.pop()
+            #penultimate operand
+            penultimateOpe = operandsStack.pop()
+            #last type
+            lastType = typesStack.pop()
+            #penultimate type
+            penultimateType = typesStack.pop()
+
+            resultType = semantic_cube[lastType][operator][penultimateType]
+            if  resultType != -1 : #can do operation
                 #add result type to stack
                 typesStack.append(resultType)
 
                 if not onGlobalScope():
+                    lastFunction = functionTable.getFunction(getLastFunction())
                     if getLastType() == TYPES['int']:
-                        functionTable.getFunction(getLastFunction()).increaseIntMemoryRequired(1)#result always increments one by one
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, lastOpe, lastFunction.getIntMemoryRequired())
+                        #add result to stack
+                        operandsStack.append(result)
+                        lastFunction.increaseIntMemoryRequired(1)#result always increments one by one
                     elif getLastType() == TYPES['double']:
-                        functionTable.getFunction(getLastFunction()).increaseDoubleMemoryRequired(1)#result always increments one by one
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, lastOpe, lastFunction.getDoubleMemoryRequired())
+                        #add result to stack
+                        operandsStack.append(result)
+                        lastFunction.increaseDoubleMemoryRequired(1)#result always increments one by one
                     elif getLastType() == TYPES['boolean']:
-                        functionTable.getFunction(getLastFunction()).increaseBooleanMemoryRequired(1)#result always increments one by one
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, lastOpe, lastFunction.getBooleanMemoryRequired())
+                        #add result to stack
+                        operandsStack.append(result)
+                        lastFunction.increaseBooleanMemoryRequired(1)#result always increments one by one
                     return 1
 
                 else: # on global scope
+                    g = functionTable.getFunction('global')
                     if getLastType() == TYPES['int']:
-                        functionTable.getFunction('global').increaseIntMemoryRequired(1)#result always increments one by one
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, lastOpe, g.getIntMemoryRequired())
+                        #add result to stack
+                        operandsStack.append(result)
+                        g.increaseIntMemoryRequired(1)#result always increments one by one
                     elif getLastType() == TYPES['double']:
-                        functionTable.getFunction('global').increaseDoubleMemoryRequired(1)#result always increments one by one
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, lastOpe, g.getIntMemoryRequired())
+                        #add result to stack
+                        operandsStack.append(result)
+                        g.increaseDoubleMemoryRequired(1)#result always increments one by one
                     elif getLastType() == TYPES['boolean']:
-                        functionTable.getFunction('global').increaseBooleanMemoryRequired(1)#result always increments one by one
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, lastOpe, g.getIntMemoryRequired())
+                        #add result to stack
+                        operandsStack.append(result)
+                        g.increaseBooleanMemoryRequired(1)#result always increments one by one
                     return 1
             else :
                 return 0
@@ -579,10 +598,6 @@ def p_term(p):
 #rule to identify the used type
 def p_term_int_used(p):
     'term_int_used :     '
-    #global temporalCounter
-    #operandsStack.append('t'+`temporalCounter`)
-    #temporalCounter += 1#TODO remember to change temporal on constants. constants do not generate temmporal
-
     operandsStack.append(p[-1])
     #type added to stack
     typesStack.append(TYPES['int'])
@@ -590,9 +605,6 @@ def p_term_int_used(p):
 #rule to identify the used type
 def p_term_double_used(p):
     'term_double_used :     '
-    #global temporalCounter
-    #operandsStack.append('t'+`temporalCounter`)
-    #temporalCounter += 1
 
 
     operandsStack.append(p[-1])
@@ -603,9 +615,6 @@ def p_term_double_used(p):
 #rule to identify the used type
 def p_term_boolean_used(p):
     'term_boolean_used :     '
-    #global temporalCounter
-    #operandsStack.append('t'+`temporalCounter`)
-    #temporalCounter += 1
 
     operandsStack.append(p[-1])
     #type added to stack

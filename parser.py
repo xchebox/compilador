@@ -228,15 +228,15 @@ def p_global_declaration(p):
 
 #declaration
 def p_declaration_statute(p):
-    '''declaration_statute :      INT int_declaration SEMICOLON
-                                | DOUBLE double_declaration SEMICOLON
-                                | BOOLEAN boolean_declaration SEMICOLON'''
+    '''declaration_statute :      INT int_declaration int_assignation SEMICOLON
+                                | DOUBLE double_declaration double_assignation SEMICOLON
+                                | BOOLEAN boolean_declaration boolean_assignation SEMICOLON'''
     vStack.pop(); #when the rule ends the function has already been defined
 
 
 #int declaration
 def p_int_declaration(p):#TODO check if add memory counter to global and main
-    'int_declaration :   variable_declared array int_assignation'
+    'int_declaration :   variable_declared array'
     if onGlobalScope() :
         g = functionTable.getFunction('global')
         getLastVariableDeclaredFromFunction('global').setType(TYPES['int']) #type added
@@ -255,7 +255,7 @@ def p_int_declaration(p):#TODO check if add memory counter to global and main
 
 #double declaration
 def p_double_declaration(p):
-    'double_declaration :   variable_declared array double_assignation'
+    'double_declaration :   variable_declared array'
     if onGlobalScope() :
         g = functionTable.getFunction('global')
         getLastVariableDeclaredFromFunction('global').setType(TYPES['double']) #type added
@@ -272,7 +272,7 @@ def p_double_declaration(p):
 
 #boolean declaration
 def p_boolean_declaration(p):
-    'boolean_declaration :   variable_declared array boolean_assignation'
+    'boolean_declaration :   variable_declared array'
     if onGlobalScope() :
         g = functionTable.getFunction('global')
         getLastVariableDeclaredFromFunction('global').setType(TYPES['boolean']) #type added
@@ -349,17 +349,20 @@ def p_function(p):
                 error('var '+p[-1]+' not defined on line', p.lineno(-1))
             else:
                 typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
-                operandsStack.append(p[-1])
+                #operandsStack.append(p[-1])
+                operandsStack.append(getVariableFromFunction(p[-1], 'global').getMemory())
         else : #function scope
             if not varExistsOnFunction(p[-1], getLastFunction()):# var not declared on local
                 if not varExistsOnFunction(p[-1], 'global'): #var not declared on global
                     error('var '+p[-1]+' not defined on line', p.lineno(-1))
                 else : #var used from global scope
                     typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
-                    operandsStack.append(p[-1])
+                    #operandsStack.append(p[-1])
+                    operandsStack.append(getVariableFromFunction(p[-1], 'global').getMemory())
             else:#variable used on local scope
                 typesStack.append(getVariableFromFunction(p[-1], getLastFunction()).getType())
-                operandsStack.append(p[-1])
+                #operandsStack.append(p[-1])
+                operandsStack.append(getVariableFromFunction(p[-1], getLastFunction()).getMemory())
 
 def p_function_called(p):
     'function_called :  '
@@ -404,11 +407,11 @@ def p_int_assignation(p):
                             | empty'''
     if p[1] == '=':
         if onGlobalScope():
-            if generateAsignationNextQuadruple(getLastVariable(), TYPES['int']) == 0:
+            if generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global').getMemory(), TYPES['int']) == 0:
                 error("Type mismatch on line", p.lineno(1))
             #TODO change into memory using globla or local scope
         else :
-            if generateAsignationNextQuadruple(getLastVariable(), TYPES['int']) == 0:
+            if generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction().getMemory(), TYPES['int']) == 0:
                 error("Type mismatch on line", p.lineno(1))
 
 #assignation of a double variable
@@ -417,11 +420,11 @@ def p_double_assignation(p):
                             | empty'''
     if p[1] == '=':
         if onGlobalScope():
-            if generateAsignationNextQuadruple(getLastVariable(), TYPES['double']) == 0:
+            if generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global').getMemory(), TYPES['double']) == 0:
                 error("Type mismatch on line", p.lineno(1))
             #TODO change into memory using globla or local scope
         else :
-            if generateAsignationNextQuadruple(getLastVariable(), TYPES['double']) == 0:
+            if generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction().getMemory(), TYPES['double']) == 0:
                 error("Type mismatch on line", p.lineno(1))
 
 
@@ -431,10 +434,10 @@ def p_boolean_assignation(p):
                             | empty'''
     if p[1] == '=':
         if onGlobalScope():
-            generateAsignationNextQuadruple(getLastVariable(), TYPES['boolean'])
+            generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global').getMemory(), TYPES['boolean'])
             #TODO change into memory using globla or local scope
         else :
-            generateAsignationNextQuadruple(getLastVariable(), TYPES['boolean'])
+            generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction().getMemory(), TYPES['boolean'])
 
 #unknown variable assignation
 def p_assignation_statute(p):
@@ -444,7 +447,8 @@ def p_assignation_statute(p):
             error('variable '+p[1]+ ' not declared on line', p.lineno(1))
         else :
             # add info into from global scope
-            if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],'global').getType()) == 0:
+            var = getVariableFromFunction(p[1],'global')
+            if generateAsignationNextQuadruple(var.getMemory(), var.getType()) == 0:
                 error('Type mismatch on line', p.lineno(1))
     else :
         if not varExistsOnFunction(p[1], getLastFunction()):
@@ -452,11 +456,13 @@ def p_assignation_statute(p):
                 error('variable '+p[1]+ ' not declared on line', p.lineno(1))
             else :
                 # add info into from global scope
-                if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],'global').getType()) == 0:
+                var = getVariableFromFunction(p[1],'global')
+                if generateAsignationNextQuadruple(var.getMemory(), var.getType()) == 0:
                     error('Type mismatch on line', p.lineno(1))
         else :
             # add into info from local scope
-            if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],getLastFunction()).getType()) == 0:
+            var = getVariableFromFunction(p[1],getLastFunction())
+            if generateAsignationNextQuadruple(var.getMemory(), var.getType()) == 0:
                 error('Type mismatch on line ', p.lineno(1))
 
 

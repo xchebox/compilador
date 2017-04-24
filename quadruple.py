@@ -19,10 +19,13 @@ class QuadrupleManager:
 class Quadruple :
 
     def __init__(self, operator, operand1, operand2, result):
-        self.operator = operator
+        self.operator = int(operator)
         self.firstOperand = operand1
         self.secondOperand = operand2
         self.result = result
+
+    def getOperator(self):
+        return self.operator
 
     def setJump(self, jump):
         self.result = jump

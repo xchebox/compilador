@@ -10,6 +10,8 @@ typesStack = [] #types stack for quadruples
 
 dimensionStack = [] #dimension stack
 
+paramsStack = []
+
 jumpStack = [] #jump stack
 
 #temporal counter. only for testing purposes
@@ -24,6 +26,13 @@ def lookDimensionStack():
     if dimensionStack[ len(dimensionStack) - 1] == FALSE_BOTTOM:
         return None
     return dimensionStack[ len(dimensionStack) - 1]
+
+def lookParamStack():
+    if len(paramsStack) == 0:
+        return None
+    if paramsStack[ len(paramsStack) - 1] == FALSE_BOTTOM:
+        return None
+    return paramsStack[ len(paramsStack) - 1]
 
 #function to lookup the last element on operator stack
 def lookOperatorStack():

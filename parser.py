@@ -407,6 +407,28 @@ def p_array_u(p):
         generateAddBaseMemoryQuadruple(var.getMemory()) #add base to index TODO to differentiate from memory
         operatorsStack.pop() # clear false bottom
         dimensionStack.pop() #removes dimension
+    else:
+        if p[-1] != ']':#if not a function name and not using array then you are going to use an var id
+            varId = operandsStack.pop()
+            if onGlobalScope() :
+                if not varExistsOnFunction(varId, 'global'):
+                    error('var '+varId+' not defined on line', p.lineno(-2))
+                else:
+                    typesStack.append(getVariableFromFunction(varId, 'global').getType())
+                    #operandsStack.append(p[-1])
+                    operandsStack.append(getVariableFromFunction(varId, 'global').getMemory())
+            else : #function scope
+                if not varExistsOnFunction(varId, getLastFunction()):# var not declared on local
+                    if not varExistsOnFunction(varId, 'global'): #var not declared on global
+                        error('var '+varId+' not defined on line', p.lineno(-2))
+                    else : #var used from global scope
+                        typesStack.append(getVariableFromFunction(varId, 'global').getType())
+                        #operandsStack.append(p[-1])
+                        operandsStack.append(getVariableFromFunction(varId, 'global').getMemory())
+                else:#variable used on local scope
+                    typesStack.append(getVariableFromFunction(varId, getLastFunction()).getType())
+                    #operandsStack.append(p[-1])
+                    operandsStack.append(getVariableFromFunction(varId, getLastFunction()).getMemory())
 
 def p_array_used(p):# only called first time you use first dimension
     'array_used :   '
@@ -494,27 +516,6 @@ def p_function(p):
 
         paramsStack.pop()# params setted
 
-
-    else :#if not a function name then you are going to use an var id
-        if onGlobalScope() :
-            if not varExistsOnFunction(p[-2], 'global'):
-                error('var '+p[-2]+' not defined on line', p.lineno(-2))
-            else:
-                typesStack.append(getVariableFromFunction(p[-2], 'global').getType())
-                #operandsStack.append(p[-1])
-                operandsStack.append(getVariableFromFunction(p[-2], 'global').getMemory())
-        else : #function scope
-            if not varExistsOnFunction(p[-2], getLastFunction()):# var not declared on local
-                if not varExistsOnFunction(p[-2], 'global'): #var not declared on global
-                    error('var '+p[-2]+' not defined on line', p.lineno(-2))
-                else : #var used from global scope
-                    typesStack.append(getVariableFromFunction(p[-2], 'global').getType())
-                    #operandsStack.append(p[-1])
-                    operandsStack.append(getVariableFromFunction(p[-2], 'global').getMemory())
-            else:#variable used on local scope
-                typesStack.append(getVariableFromFunction(p[-2], getLastFunction()).getType())
-                #operandsStack.append(p[-1])
-                operandsStack.append(getVariableFromFunction(p[-2], getLastFunction()).getMemory())
 
 def p_function_called(p):
     'function_called :  '

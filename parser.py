@@ -212,8 +212,8 @@ def generateDoWhileGotoTQuadruple():
     quadrupleManager.addQuadruple(operators['gotoT'], operandsStack.pop(), ' ', jumpStack.pop())#TODO decide what to do with goto operator code
 
 #function to generate a new return quadruple
-def generateReturnQuadruple():
-    quadrupleManager.addQuadruple(operators['return'], ' ', ' ', getVariableFromFunction(getLastFunction(), 'global').getMemory())
+def generateReturnQuadruple(returnValue):
+    quadrupleManager.addQuadruple(operators['return'], returnValue, ' ', getVariableFromFunction(getLastFunction(), 'global').getMemory())
 
 #function to generate ERA quadruple
 def generateERAQuadruple(function):
@@ -230,7 +230,7 @@ def generateParamQuadruple(function, k):
     if typesStack.pop() != var.getType():
         return 0
     else:
-        quadrupleManager.addQuadruple(operators['param'], operandsStack.pop(), ' ', varName)#TODO replace for memory
+        quadrupleManager.addQuadruple(operators['param'], operandsStack.pop(), ' ', var.getMemory())#TODO replace for memory - done
         return 1
 
 #function to generate ver on dimension check
@@ -543,7 +543,7 @@ def p_param_passed(p):
         error('function %s needs %s elements, %s given, on line '%(functionId, paramsNo, lookParamStack()[functionId]),p.lineno(0))
     else:
         if generateParamQuadruple(functionId, lookParamStack()[functionId])  == 0: #Quadruple generated
-            error('Type mismatch on line ', p.lineno(0))
+            error('Type mismatch on line ', p.lineno(0))#//TODO add error message on type
 
 
 
@@ -941,7 +941,7 @@ def p_do_while_then(p):
 #return statement
 def p_return_statute(p):
     '''return_statute :   RETURN expression SEMICOLON'''
-    #typesStack.pop() TODO dont remember why pop
+    #typesStack.pop() TODO dont remember why pop i think i already solved
     #add var with function name to global scope
     addVariableToFunction(getLastFunction(), 'global')
     rType = functionTable.getFunction(getLastFunction()).getReturnType()
@@ -956,8 +956,11 @@ def p_return_statute(p):
         functionTable.getFunction('global').increaseBooleanLocalMemoryRequired(1)
         getVariableFromFunction(getLastFunction(), 'global').setMemory(memoryManager.globalM.requestBooleanMemory(1))
 
+    typeGiven = typesStack.pop()
+    if rType != typeGiven:
+        error("return type must be %s, %s given on function %s, on line "%(TYPES.keys()[TYPES.values().index(rType)], TYPES.keys()[TYPES.values().index(typeGiven)], getLastFunction()),p.lineno(0))
 
-    generateReturnQuadruple()
+    generateReturnQuadruple(operandsStack.pop())
     memoryManager.clearMemory()
     fStack.pop()# function defined so we remove it from the stack
 

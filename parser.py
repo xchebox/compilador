@@ -414,21 +414,32 @@ def p_array_u(p):
                 if not varExistsOnFunction(varId, 'global'):
                     error('var '+varId+' not defined on line', p.lineno(-2))
                 else:
-                    typesStack.append(getVariableFromFunction(varId, 'global').getType())
+                    var = getVariableFromFunction(varId, 'global')
+                    if len(var.getDimension()) > 0: #id is an array and is being used as normal var
+                        error('var '+varId+' is an array, on line', p.lineno(-2))
+                    typesStack.append(var.getType())
                     #operandsStack.append(p[-1])
-                    operandsStack.append(getVariableFromFunction(varId, 'global').getMemory())
+                    operandsStack.append(var.getMemory())
             else : #function scope
                 if not varExistsOnFunction(varId, getLastFunction()):# var not declared on local
                     if not varExistsOnFunction(varId, 'global'): #var not declared on global
                         error('var '+varId+' not defined on line', p.lineno(-2))
                     else : #var used from global scope
-                        typesStack.append(getVariableFromFunction(varId, 'global').getType())
+                        var = getVariableFromFunction(varId, 'global')
+                        if len(var.getDimension()) > 0: #id is an array and is being used as normal var
+                            error('var '+varId+' is an array, on line', p.lineno(-2))
+
+                        typesStack.append(var.getType())
                         #operandsStack.append(p[-1])
-                        operandsStack.append(getVariableFromFunction(varId, 'global').getMemory())
+                        operandsStack.append(var.getMemory())
                 else:#variable used on local scope
-                    typesStack.append(getVariableFromFunction(varId, getLastFunction()).getType())
+                    var = getVariableFromFunction(varId, getLastFunction())
+                    if len(var.getDimension()) > 0: #id is an array and is being used as normal var
+                        error('var '+varId+' is an array, on line', p.lineno(-2))
+
+                    typesStack.append(var.getType())
                     #operandsStack.append(p[-1])
-                    operandsStack.append(getVariableFromFunction(varId, getLastFunction()).getMemory())
+                    operandsStack.append(var.getMemory())
 
 def p_array_used(p):# only called first time you use first dimension
     'array_used :   '

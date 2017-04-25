@@ -8,6 +8,8 @@ operandsStack = [] #operands stack for quadruples
 operatorsStack = []#operators stack for quadruples
 typesStack = [] #types stack for quadruples
 
+dimensionStack = [] #dimension stack
+
 jumpStack = [] #jump stack
 
 #temporal counter. only for testing purposes
@@ -15,6 +17,13 @@ temporalCounter = 1
 
 FALSE_BOTTOM = '?'
 JUMP_SPACE = '_'
+
+def lookDimensionStack():
+    if len(dimensionStack) == 0:
+        return None
+    if dimensionStack[ len(dimensionStack) - 1] == FALSE_BOTTOM:
+        return None
+    return dimensionStack[ len(dimensionStack) - 1]
 
 #function to lookup the last element on operator stack
 def lookOperatorStack():

@@ -113,3 +113,14 @@ semantic_cube[TYPES['double']][operators['|']][TYPES['boolean']]             = T
 semantic_cube[TYPES['boolean']][operators['|']][TYPES['int']]                = TYPES['boolean']
 semantic_cube[TYPES['boolean']][operators['|']][TYPES['double']]             = TYPES['boolean']
 semantic_cube[TYPES['boolean']][operators['|']][TYPES['boolean']]            = TYPES['boolean']
+#semantic rules
+#18 verify
+semantic_cube[TYPES['int']][operators['verify']][TYPES['int']]                  = TYPES['int']
+semantic_cube[TYPES['int']][operators['verify']][TYPES['double']]               = -1
+semantic_cube[TYPES['int']][operators['verify']][TYPES['boolean']]              = -1
+semantic_cube[TYPES['double']][operators['verify']][TYPES['int']]               = -1
+semantic_cube[TYPES['double']][operators['verify']][TYPES['double']]            = -1
+semantic_cube[TYPES['double']][operators['verify']][TYPES['boolean']]           = -1
+semantic_cube[TYPES['boolean']][operators['verify']][TYPES['int']]              = -1
+semantic_cube[TYPES['boolean']][operators['verify']][TYPES['double']]           = -1
+semantic_cube[TYPES['boolean']][operators['verify']][TYPES['boolean']]          = -1

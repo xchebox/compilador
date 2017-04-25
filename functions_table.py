@@ -26,9 +26,18 @@ class Function():
         self.return_type = 0
         self.var_table = VarTable()
         self.firstQuadruple = 0
-        self.intMemoryRequired = 0
-        self.doubleMemoryRequired = 0
-        self.booleanMemoryRequired = 0
+
+        self.intLocalMemoryRequired = 0
+        self.doubleLocalMemoryRequired = 0
+        self.booleanLocalMemoryRequired = 0
+
+        self.intConstMemoryRequired = 0
+        self.doubleConstMemoryRequired = 0
+        self.booleanConstMemoryRequired = 0
+
+        self.intTempMemoryRequired = 0
+        self.doubleTempMemoryRequired = 0
+        self.booleanTempMemoryRequired = 0
 
     def setFirstQuadruple(self, quadruple):
         self.firstQuadruple = quadruple
@@ -60,20 +69,56 @@ class Function():
     def getVariable(self, id):
         return self.var_table.getVariable(id)
 
-    def getIntMemoryRequired(self):
-        return self.intMemoryRequired
+    def getIntLocalMemoryRequired(self):
+        return self.intLocalMemoryRequired
 
-    def getDoubleMemoryRequired(self):
-        return self.doubleMemoryRequired
+    def getDoubleLocalMemoryRequired(self):
+        return self.doubleLocalMemoryRequired
 
-    def getBooleanMemoryRequired(self):
-        return self.booleanMemoryRequired
+    def getBooleanLocalMemoryRequired(self):
+        return self.booleanLocalMemoryRequired
 
-    def increaseIntMemoryRequired(self, amountToIncrement):
-        self.intMemoryRequired += amountToIncrement
+    def getIntConstMemoryRequired(self):
+        return self.intConstMemoryRequired
 
-    def increaseBooleanMemoryRequired(self, amountToIncrement):
-        self.booleanMemoryRequired += amountToIncrement
+    def getDoubleConstMemoryRequired(self):
+        return self.doubleConstMemoryRequired
 
-    def increaseDoubleMemoryRequired(self, amountToIncrement):
-        self.doubleMemoryRequired += amountToIncrement
+    def getBooleanConstMemoryRequired(self):
+        return self.booleanConstMemoryRequired
+
+    def getIntTempMemoryRequired(self):
+        return self.intTempMemoryRequired
+
+    def getDoubleTempMemoryRequired(self):
+        return self.doubleTempMemoryRequired
+
+    def getBooleanTempMemoryRequired(self):
+        return self.booleanTempMemoryRequired
+
+    def increaseIntLocalMemoryRequired(self, amountToIncrement):
+        self.intLocalMemoryRequired += amountToIncrement
+
+    def increaseBooleanLocalMemoryRequired(self, amountToIncrement):
+        self.booleanLocalMemoryRequired += amountToIncrement
+
+    def increaseDoubleLocalMemoryRequired(self, amountToIncrement):
+        self.doubleLocalMemoryRequired += amountToIncrement
+
+    def increaseIntConstMemoryRequired(self, amountToIncrement):
+        self.intConstMemoryRequired += amountToIncrement
+
+    def increaseBooleanConstMemoryRequired(self, amountToIncrement):
+        self.booleanConstMemoryRequired += amountToIncrement
+
+    def increaseDoubleConstMemoryRequired(self, amountToIncrement):
+        self.doubleConstMemoryRequired += amountToIncrement
+
+    def increaseIntTempMemoryRequired(self, amountToIncrement):
+        self.intTempMemoryRequired += amountToIncrement
+
+    def increaseBooleanTempMemoryRequired(self, amountToIncrement):
+        self.booleanTempMemoryRequired += amountToIncrement
+
+    def increaseDoubleTempMemoryRequired(self, amountToIncrement):
+        self.doubleTempMemoryRequired += amountToIncrement

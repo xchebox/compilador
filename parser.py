@@ -5,8 +5,9 @@ from semantic_cube import TYPES, semantic_cube
 from operators import operators
 from functions_table import *
 from stacks import *
-from memory import MemoryManager
+from memory import memoryManager
 from quadruple import QuadrupleManager
+from virtual_machine import VirtualMachine
 
 
 #generates new function table
@@ -16,7 +17,7 @@ functionTable = FunctionTable()
 quadrupleManager = QuadrupleManager()
 
 #MemoryManager
-memoryManager = MemoryManager()
+#memoryManager = MemoryManager()
 
 #checs if on global scope
 def onGlobalScope():
@@ -29,7 +30,12 @@ def printSummary():
         print ("function: %s has %s parameters and return type is %s. It starts on %s quadruple" % (f, len(functionTable.getFunctionTable()[f].getParams()), TYPES.keys()[TYPES.values().index(functionTable.getFunctionTable()[f].getReturnType())], functionTable.getFunctionTable()[f].getFirstQuadruple()))
         print('\n')
         print('requires :\n')
-        print('%s ints\n%s doubles\n%s booleans\n'%(functionTable.getFunctionTable()[f].getIntMemoryRequired(), functionTable.getFunctionTable()[f].getDoubleMemoryRequired(), functionTable.getFunctionTable()[f].getBooleanMemoryRequired()))
+        print('local :\n')
+        print('%s ints\n%s doubles\n%s booleans\n'%(functionTable.getFunctionTable()[f].getIntLocalMemoryRequired(), functionTable.getFunctionTable()[f].getDoubleLocalMemoryRequired(), functionTable.getFunctionTable()[f].getBooleanLocalMemoryRequired()))
+        print('temp :\n')
+        print('%s ints\n%s doubles\n%s booleans\n'%(functionTable.getFunctionTable()[f].getIntTempMemoryRequired(), functionTable.getFunctionTable()[f].getDoubleTempMemoryRequired(), functionTable.getFunctionTable()[f].getBooleanTempMemoryRequired()))
+        print('const :\n')
+        print('%s ints\n%s doubles\n%s booleans\n'%(functionTable.getFunctionTable()[f].getIntConstMemoryRequired(), functionTable.getFunctionTable()[f].getDoubleConstMemoryRequired(), functionTable.getFunctionTable()[f].getBooleanConstMemoryRequired()))
         print ("the variables are :")
         print('\n')
         for v in functionTable.getFunctionTable()[f].getVarTable().table:
@@ -54,16 +60,15 @@ def writeSummary():
 def writeQuadruples():
     quadruple = open("./out/quadruple.cp", "w")
     for q in quadrupleManager.quadrupleStack:
-        quadruple.write ("%s-- %s %s %s %s" % (quadrupleManager.quadrupleStack.index(q), operators.keys()[operators.values().index(q.operator)], q.firstOperand, q.secondOperand, q.result))
+        quadruple.write ("%s,%s,%s,%s\n" % (q.operator, q.firstOperand, q.secondOperand, q.result))
 
 def printQuadruples():
     print "Quadruples"
 
     for q in quadrupleManager.quadrupleStack:
-        print "%s-- %s %s %s %s" % (quadrupleManager.quadrupleStack.index(q), operators.keys()[operators.values().index(q.operator)], q.firstOperand, q.secondOperand, q.result)
+        print "%s-- %s, %s, %s, %s" % (quadrupleManager.quadrupleStack.index(q), operators.keys()[operators.values().index(q.operator)], q.firstOperand, q.secondOperand, q.result)
 
-    for q in quadrupleManager.quadrupleStack:
-        print ' '
+    print "\n\n\n\n"
 
 
 
@@ -101,43 +106,83 @@ def generateGoToMain():
 
 #used to generates quadruple. A common function used by the different operators
 def generateOperatorNextQuadruple(operator):
-    global temporalCounter
+    #global temporalCounter
     if isSameOrder(operator):#last operator in stack is a mult
         if not getPenultimateType() is None:
-            resultType = semantic_cube[getLastType()][lookOperatorStack()][getPenultimateType()]
-            if  resultType != -1 : #can do operator
-                result = quadrupleManager.addQuadruple(lookOperatorStack(), getPenultimateOperand(), getLastOperand(), 't'+`temporalCounter`)
-                temporalCounter += 1
-                #remove last operator
-                operatorsStack.pop()
-                #remove operands used
-                operandsStack.pop()
-                operandsStack.pop()#TODO change to pop and not looknext
-                #remove types used
-                typesStack.pop()
-                typesStack.pop()
-                #add result to stack
-                operandsStack.append(result)
+            #remove last operator
+            operator = operatorsStack.pop()
+            #last operand
+            lastOpe = operandsStack.pop()
+            #penultimate operand
+            penultimateOpe = operandsStack.pop()
+            #last type
+            lastType = typesStack.pop()
+            #penultimate type
+            penultimateType = typesStack.pop()
+
+            resultType = semantic_cube[lastType][operator][penultimateType]
+            if  resultType != -1 : #can do operation
                 #add result type to stack
                 typesStack.append(resultType)
 
                 if not onGlobalScope():
+                    lastFunction = functionTable.getFunction(getLastFunction())
                     if getLastType() == TYPES['int']:
-                        functionTable.getFunction(getLastFunction()).increaseIntMemoryRequired(1)#result always increments one by one
+                        #temp increase memory by one
+                        temp = memoryManager.tempM.requestIntMemory(1)
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, lastOpe, temp)
+                        #add result to stack
+                        operandsStack.append(result)
+                        lastFunction.increaseIntTempMemoryRequired(1)#result always increments one by one
                     elif getLastType() == TYPES['double']:
-                        functionTable.getFunction(getLastFunction()).increaseDoubleMemoryRequired(1)#result always increments one by one
+                        #temp increase memory by one
+                        temp = memoryManager.tempM.requestDoubleMemory(1)
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, lastOpe, temp)
+                        #add result to stack
+                        operandsStack.append(result)
+                        lastFunction.increaseDoubleTempMemoryRequired(1)#result always increments one by one
                     elif getLastType() == TYPES['boolean']:
-                        functionTable.getFunction(getLastFunction()).increaseBooleanMemoryRequired(1)#result always increments one by one
-                return 1
+                        #temp increase memory by one
+                        temp = memoryManager.tempM.requestBooleanMemory(1)
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, lastOpe, temp)
+                        #add result to stack
+                        operandsStack.append(result)
+                        lastFunction.increaseBooleanTempMemoryRequired(1)#result always increments one by one
+                    return 1
+
+                else: # on global scope
+                    g = functionTable.getFunction('global')
+                    if getLastType() == TYPES['int']:
+                        #temp increase memory by one
+                        temp = memoryManager.tempM.requestIntMemory(1)
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, temp)
+                        #add result to stack
+                        operandsStack.append(result)
+                        g.increaseIntTempMemoryRequired(1)#result always increments one by one
+                    elif getLastType() == TYPES['double']:
+                        #temp increase memory by one
+                        temp = memoryManager.tempM.requestDoubleMemory(1)
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, lastOpe, temp)
+                        #add result to stack
+                        operandsStack.append(result)
+                        g.increaseDoubleTempMemoryRequired(1)#result always increments one by one
+                    elif getLastType() == TYPES['boolean']:
+                        #temp increase memory by one
+                        temp = memoryManager.tempM.requestBooleanMemory(1)
+                        result = quadrupleManager.addQuadruple(operator, penultimateOpe, lastOpe, temp)
+                        #add result to stack
+                        operandsStack.append(result)
+                        g.increaseBooleanTempMemoryRequired(1)#result always increments one by one
+                    return 1
             else :
                 return 0
     return -1
 
 #generates an assignation quadruple. Var is the variable that is going to be assigned
-def generateAsignationNextQuadruple(var, varType):
+def generateAsignationNextQuadruple(varMemory, varType, id):
     resultType = semantic_cube[typesStack.pop()][operators['=']][varType]
     if  resultType != -1 : #can do operator
-        quadrupleManager.addQuadruple(operators['='], operandsStack.pop(), ' ', var)
+        quadrupleManager.addQuadruple(operators['='], operandsStack.pop(), ' ', varMemory)
         return 1
     else :
         return 0
@@ -167,7 +212,7 @@ def generateDoWhileGotoTQuadruple():
 
 #function to generate a new return quadruple
 def generateReturnQuadruple():
-    quadrupleManager.addQuadruple(operators['return'], ' ', ' ', ' ')
+    quadrupleManager.addQuadruple(operators['return'], ' ', ' ', getVariableFromFunction(getLastFunction(), 'global').getMemory())
 
 #function to generate ERA quadruple
 def generateERAQuadruple(function):
@@ -186,6 +231,20 @@ def generateParamQuadruple(function, k):
     else:
         quadrupleManager.addQuadruple(operators['param'], operandsStack.pop(), ' ', varName)#TODO replace for memory
         return 1
+
+#function to generate ver on dimension check
+def generateVerifyQuadruple(dimension):
+    resultType = semantic_cube[getLastType()][operators['verify']][TYPES['int']]
+    if resultType == -1: #TODO add checks to boolena in if and while on decide to use int and doubles as booleans
+        return -1
+    quadrupleManager.addQuadruple(operators['verify'], getLastOperand(), dimension, ' ')
+    return 1
+
+def generateAuxArrayFunction(mDimension):
+    temp = memoryManager.tempM.requestIntMemory(1)
+    quadrupleManager.addQuadruple(operators['*'], operandsStack.pop(), mDimension, temp)#TODO check when to delete temps and change mDimension for memory
+    operandsStack.append(temp)
+    typesStack.append(TYPES['int'])#aux always generate int
 
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
@@ -219,51 +278,66 @@ def p_global_declaration(p):
 
 #declaration
 def p_declaration_statute(p):
-    '''declaration_statute :      INT int_declaration SEMICOLON
-                                | DOUBLE double_declaration SEMICOLON
-                                | BOOLEAN boolean_declaration SEMICOLON'''
+    '''declaration_statute :      INT int_declaration int_assignation SEMICOLON
+                                | DOUBLE double_declaration double_assignation SEMICOLON
+                                | BOOLEAN boolean_declaration boolean_assignation SEMICOLON'''
     vStack.pop(); #when the rule ends the function has already been defined
 
 
 #int declaration
 def p_int_declaration(p):#TODO check if add memory counter to global and main
-    'int_declaration :   variable_declared array int_assignation'
+    'int_declaration :   variable_declared array'
     if onGlobalScope() :
+        g = functionTable.getFunction('global')
         getLastVariableDeclaredFromFunction('global').setType(TYPES['int']) #type added
         size = getLastVariableDeclaredFromFunction('global').getTotalMemoryDimension()
-        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestIntMemory(size))
+        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.globalM.requestIntMemory(size))
+        #getLastVariableDeclaredFromFunction('global').setMemory(g.getIntMemoryRequired())TODO delete this
+        g.increaseIntLocalMemoryRequired(size)
     else :
+        lastFunction = functionTable.getFunction(getLastFunction())
         getLastVariableDeclaredFromLastFunction().setType(TYPES['int']) #type added
         size = getLastVariableDeclaredFromLastFunction().getTotalMemoryDimension()
-        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.requestIntMemory(size))
-        functionTable.getFunction(getLastFunction()).increaseIntMemoryRequired(size)
+        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.localM.requestIntMemory(size))
+        #getLastVariableDeclaredFromLastFunction().setMemory(lastFunction.getIntMemoryRequired())TODO delete this
+        lastFunction.increaseIntLocalMemoryRequired(size)
 
 
 #double declaration
 def p_double_declaration(p):
-    'double_declaration :   variable_declared array double_assignation'
+    'double_declaration :   variable_declared array'
     if onGlobalScope() :
+        g = functionTable.getFunction('global')
         getLastVariableDeclaredFromFunction('global').setType(TYPES['double']) #type added
         size = getLastVariableDeclaredFromFunction('global').getTotalMemoryDimension()
-        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestDoubleMemory(size))
+        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.globalM.requestDoubleMemory(size))
+        #getLastVariableDeclaredFromFunction('global').setMemory(g.getDoubleMemoryRequired())
+        g.increaseDoubleLocalMemoryRequired(size)
     else :
+        lastFunction = functionTable.getFunction(getLastFunction())
         getLastVariableDeclaredFromLastFunction().setType(TYPES['double']) #type added
         size = getLastVariableDeclaredFromLastFunction().getTotalMemoryDimension()
-        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.requestDoubleMemory(size))
-        functionTable.getFunction(getLastFunction()).increaseDoubleMemoryRequired(size)
+        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.localM.requestDoubleMemory(size))
+        #getLastVariableDeclaredFromLastFunction().setMemory(lastFunction.getDoubleMemoryRequired())
+        lastFunction.increaseDoubleLocalMemoryRequired(size)
 
 #boolean declaration
 def p_boolean_declaration(p):
-    'boolean_declaration :   variable_declared array boolean_assignation'
+    'boolean_declaration :   variable_declared array'
     if onGlobalScope() :
+        g = functionTable.getFunction('global')
         getLastVariableDeclaredFromFunction('global').setType(TYPES['boolean']) #type added
         size = getLastVariableDeclaredFromFunction('global').getTotalMemoryDimension()
-        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.requestBooleanMemory(size))
+        getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.globalM.requestBooleanMemory(size))
+        #getLastVariableDeclaredFromFunction('global').setMemory(g.getBooleanMemoryRequired())
+        g.increaseBooleanLocalMemoryRequired(size)
     else :
+        lastFunction = functionTable.getFunction(getLastFunction())
         getLastVariableDeclaredFromLastFunction().setType(TYPES['boolean']) #type added
         size = getLastVariableDeclaredFromLastFunction().getTotalMemoryDimension()
-        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.requestBooleanMemory(size))
-        functionTable.getFunction(getLastFunction()).increaseBooleanMemoryRequired(size)
+        getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.localM.requestBooleanMemory(size))
+        #getLastVariableDeclaredFromLastFunction().setMemory(lastFunction.getBooleanMemoryRequired())
+        lastFunction.increaseBooleanLocalMemoryRequired(size)
 
 #variable declared. Extra to know a variable has been declared
 def p_variable_declared(p):
@@ -301,12 +375,59 @@ def p_dimension_added(p):
 
 #possible array use
 def p_array_u(p):
-    '''array_u :      LBRACKET array_used expression RBRACKET array_u
+    '''array_u :      LBRACKET array_used expression array_dimension_used RBRACKET array_u
                     | empty'''
 
 def p_array_used(p):
-    'array_used :     '
+    'array_used :   '
+    if p[-1] == '[':
+        if lookDimensionStack() is None: # dimension stack empty
+            dimensionStack.append({p[-2] : 0})# first dimension
+            operatorsStack.append(FALSE_BOTTOM)
+            if onGlobalScope():
+                if not varExistsOnFunction(p[-2], 'global'):
+                    error("var %s is not declared "%(p[-2]), p.lineno(-1))
+                var = getVariableFromFunction(p[-2], 'global')
+                if len(var.getDimension()) <= 0:
+                    error("var %s is not an array, on line "%(p[-2]), p.lineno(-1))
+                # is dimension variable on global
 
+            else :
+                if not varExistsOnFunction(p[-2], getLastFunction()):# var not declared on local
+                    if not varExistsOnFunction(p[-2], 'global'): #var not declared on global
+                        error('var '+p[-2]+' not defined on line', p.lineno(-1))
+                    else : #var on global #TODO change pop on term id
+                        var = getVariableFromFunction(p[-2], 'global')
+                        if len(var.getDimension()) <= 0:
+                            error("var %s is not an array, on line "%(p[-2]), p.lineno(-1))
+
+                else: #var exits on local
+                    var = getVariableFromFunction(p[-2], getLastFunction())
+                    if len(var.getDimension()) <= 0:
+                        error("var %s is not an array, on line "%(p[-2]), p.lineno(-1))
+
+
+
+
+def p_array_dimension_used(p):
+    'array_dimension_used :     '
+    varId = next(iter(lookDimensionStack()))
+    if onGlobalScope():
+        var = getVariableFromFunction(varId, 'global')
+    else :
+        if varExistsOnFunction(varId, getLastFunction()):
+            var = getVariableFromFunction(varId, getLastFunction()) #exists on local
+        else :#exists on global
+            var = getVariableFromFunction(varId, 'global')
+
+    dimension = var.getDimension()[lookDimensionStack()[varId]]
+    if generateVerifyQuadruple(dimension.size) == -1:# TODO check if verify uses memory
+        error("arrays must be accessed by an int, %s given in var %s, on line "%(TYPES.keys()[TYPES.values().index(getLastType())], varId), p.lineno(-1))
+
+    #verify quadruple generated
+
+    if len(var.getDimension()) - 1 > lookDimensionStack()[varId]: #has more dimensions
+        generateAuxArrayFunction(dimension.m)
 
 #possible function use as expression
 def p_function(p):
@@ -316,7 +437,7 @@ def p_function(p):
         generateGoSubQuadruple(p[-1])
         functionCalled = functionTable.getFunction(p[-1]) #function called
         typesStack.append(functionCalled.getReturnType())
-        operandsStack.append(operandsStack.pop()) #TODO change for memory
+        #operandsStack.append(operandsStack.pop()) #TODO checks this
         #TODO release memory after return
 
 
@@ -326,17 +447,20 @@ def p_function(p):
                 error('var '+p[-1]+' not defined on line', p.lineno(-1))
             else:
                 typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
-                operandsStack.append(p[-1])
+                #operandsStack.append(p[-1])
+                operandsStack.append(getVariableFromFunction(p[-1], 'global').getMemory())
         else : #function scope
             if not varExistsOnFunction(p[-1], getLastFunction()):# var not declared on local
                 if not varExistsOnFunction(p[-1], 'global'): #var not declared on global
                     error('var '+p[-1]+' not defined on line', p.lineno(-1))
                 else : #var used from global scope
                     typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
-                    operandsStack.append(p[-1])
+                    #operandsStack.append(p[-1])
+                    operandsStack.append(getVariableFromFunction(p[-1], 'global').getMemory())
             else:#variable used on local scope
                 typesStack.append(getVariableFromFunction(p[-1], getLastFunction()).getType())
-                operandsStack.append(p[-1])
+                #operandsStack.append(p[-1])
+                operandsStack.append(getVariableFromFunction(p[-1], getLastFunction()).getMemory())
 
 def p_function_called(p):
     'function_called :  '
@@ -381,11 +505,11 @@ def p_int_assignation(p):
                             | empty'''
     if p[1] == '=':
         if onGlobalScope():
-            if generateAsignationNextQuadruple(getLastVariable(), TYPES['int']) == 0:
+            if generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global').getMemory(), TYPES['int'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
             #TODO change into memory using globla or local scope
         else :
-            if generateAsignationNextQuadruple(getLastVariable(), TYPES['int']) == 0:
+            if generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction().getMemory(), TYPES['int'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
 
 #assignation of a double variable
@@ -394,11 +518,11 @@ def p_double_assignation(p):
                             | empty'''
     if p[1] == '=':
         if onGlobalScope():
-            if generateAsignationNextQuadruple(getLastVariable(), TYPES['double']) == 0:
+            if generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global').getMemory(), TYPES['double'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
             #TODO change into memory using globla or local scope
         else :
-            if generateAsignationNextQuadruple(getLastVariable(), TYPES['double']) == 0:
+            if generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction().getMemory(), TYPES['double'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
 
 
@@ -408,10 +532,10 @@ def p_boolean_assignation(p):
                             | empty'''
     if p[1] == '=':
         if onGlobalScope():
-            generateAsignationNextQuadruple(getLastVariable(), TYPES['boolean'])
+            generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global').getMemory(), TYPES['boolean'], getLastVariable())
             #TODO change into memory using globla or local scope
         else :
-            generateAsignationNextQuadruple(getLastVariable(), TYPES['boolean'])
+            generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction().getMemory(), TYPES['boolean'], getLastVariable())
 
 #unknown variable assignation
 def p_assignation_statute(p):
@@ -421,7 +545,8 @@ def p_assignation_statute(p):
             error('variable '+p[1]+ ' not declared on line', p.lineno(1))
         else :
             # add info into from global scope
-            if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],'global').getType()) == 0:
+            var = getVariableFromFunction(p[1],'global')
+            if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
                 error('Type mismatch on line', p.lineno(1))
     else :
         if not varExistsOnFunction(p[1], getLastFunction()):
@@ -429,11 +554,13 @@ def p_assignation_statute(p):
                 error('variable '+p[1]+ ' not declared on line', p.lineno(1))
             else :
                 # add info into from global scope
-                if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],'global').getType()) == 0:
+                var = getVariableFromFunction(p[1],'global')
+                if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
                     error('Type mismatch on line', p.lineno(1))
         else :
             # add into info from local scope
-            if generateAsignationNextQuadruple(p[1], getVariableFromFunction(p[1],getLastFunction()).getType()) == 0:
+            var = getVariableFromFunction(p[1],getLastFunction())
+            if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
                 error('Type mismatch on line ', p.lineno(1))
 
 
@@ -550,37 +677,40 @@ def p_term(p):
 #rule to identify the used type
 def p_term_int_used(p):
     'term_int_used :     '
-    #global temporalCounter
-    #operandsStack.append('t'+`temporalCounter`)
-    #temporalCounter += 1#TODO remember to change temporal on constants. constants do not generate temmporal
-
-    operandsStack.append(p[-1])
+    #constants have  size 1
+    const = memoryManager.consM.requestIntMemory(1)
+    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['int'])
+    operandsStack.append(const)
     #type added to stack
     typesStack.append(TYPES['int'])
+    if not onGlobalScope():# increase constant memory required
+        functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
 
 #rule to identify the used type
 def p_term_double_used(p):
     'term_double_used :     '
-    #global temporalCounter
-    #operandsStack.append('t'+`temporalCounter`)
-    #temporalCounter += 1
-
-
-    operandsStack.append(p[-1])
+    #constants have  size 1
+    const = memoryManager.consM.requestDoubleMemory(1)
+    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['double'])
+    operandsStack.append(const)
 
     #type added to stack
     typesStack.append(TYPES['double'])
+    if not onGlobalScope():# increase constant memory required
+        functionTable.getFunction(getLastFunction()).increaseDoubleConstMemoryRequired(1)
 
 #rule to identify the used type
 def p_term_boolean_used(p):
     'term_boolean_used :     '
-    #global temporalCounter
-    #operandsStack.append('t'+`temporalCounter`)
-    #temporalCounter += 1
+    #constants have  size 1
+    const = memoryManager.consM.requestBooleanMemory(1)
+    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['boolean'])
+    operandsStack.append(const)
 
-    operandsStack.append(p[-1])
     #type added to stack
     typesStack.append(TYPES['boolean'])
+    if not onGlobalScope():# increase constant memory required
+        functionTable.getFunction(getLastFunction()).increaseBooleanConstMemoryRequired(1)
 
 #rule to identify a use of parenthesis
 def p_term_parenthesis_used(p):
@@ -640,17 +770,21 @@ def p_param_declaration(p):
 #param declared. Used to know when a param has been declared
 def p_param_declared(p):
     '''param_declared :'''
+    lastFunction = functionTable.getFunction(getLastFunction())
     addVariableToLastFunction(p[-1])
     getVariableFromFunction(p[-1], getLastFunction()).setType(TYPES[p[-2]])#type added to var and argument
     size = getVariableFromFunction(p[-1], getLastFunction()).getTotalMemoryDimension()
-    getVariableFromFunction(p[-1], getLastFunction()).setMemory(memoryManager.requestMemoryOfType(size, TYPES[p[-2]]))
+    getVariableFromFunction(p[-1], getLastFunction()).setMemory(memoryManager.localM.requestMemoryOfType(size, TYPES[p[-2]]))
     functionTable.getFunction(getLastFunction()).addParam(p[-1]) #param counter added
     if TYPES[p[-2]] == TYPES['int']: # is an integer
-        functionTable.getFunction(getLastFunction()).increaseIntMemoryRequired(size)
+        #getVariableFromFunction(p[-1], getLastFunction()).setMemory(lastFunction.getIntMemoryRequired())
+        lastFunction.increaseIntLocalMemoryRequired(size)
     elif TYPES[p[-2]] == TYPES['double']: # is a double
-        functionTable.getFunction(getLastFunction()).increaseDoubleMemoryRequired(size)
+        #getVariableFromFunction(p[-1], getLastFunction()).setMemory(lastFunction.getDoubleMemoryRequired())
+        lastFunction.increaseDoubleLocalMemoryRequired(size)
     elif TYPES[p[-2]] == TYPES['boolean']: # is a boolean
-        functionTable.getFunction(getLastFunction()).increaseBooleanMemoryRequired(size)
+        #getVariableFromFunction(p[-1], getLastFunction()).setMemory(lastFunction.getBooleanMemoryRequired())
+        lastFunction.increaseBooleanLocalMemoryRequired(size)
     else :
         error('internal error')
         #an error occurred
@@ -690,7 +824,7 @@ def p_if_statute(p):
 def p_then(p):
     'then :          '
     if typesStack.pop() != TYPES['boolean']:
-        error('Semantic error on if statute on line ', p.lineno(0))
+        error('Semantic error in if statute on line ', p.lineno(0))
     else:
         #actual boolean expression
         generateGotoFQuadruple()
@@ -744,10 +878,24 @@ def p_do_while_then(p):
 #return statement
 def p_return_statute(p):
     '''return_statute :   RETURN expression SEMICOLON'''
-    generateReturnQuadruple()
     #typesStack.pop() TODO dont remember why pop
-    addVariableToLastFunction('return')#TODO change to memory
-    getVariableFromFunction('return', getLastFunction()).setType(functionTable.getFunction(getLastFunction()).getReturnType())
+    #add var with function name to global scope
+    addVariableToFunction(getLastFunction(), 'global')
+    rType = functionTable.getFunction(getLastFunction()).getReturnType()
+    getVariableFromFunction(getLastFunction(), 'global').setType(rType)
+    if rType == TYPES['int']:
+        functionTable.getFunction('global').increaseIntLocalMemoryRequired(1)
+        getVariableFromFunction(getLastFunction(), 'global').setMemory(memoryManager.globalM.requestIntMemory(1))
+    if rType == TYPES['double']:
+        functionTable.getFunction('global').increaseDoubleLocalMemoryRequired(1)
+        getVariableFromFunction(getLastFunction(), 'global').setMemory(memoryManager.globalM.requestDoubleMemory(1))
+    if rType == TYPES['boolean']:
+        functionTable.getFunction('global').increaseBooleanLocalMemoryRequired(1)
+        getVariableFromFunction(getLastFunction(), 'global').setMemory(memoryManager.globalM.requestBooleanMemory(1))
+
+
+    generateReturnQuadruple()
+    memoryManager.clearMemory()
     fStack.pop()# function defined so we remove it from the stack
 
 #function statute
@@ -850,3 +998,17 @@ parser.parse( file.read() )
 
 printSummary()
 printQuadruples()
+
+writeQuadruples()
+memoryManager.prepareMemory()
+
+vM = VirtualMachine()
+
+vM.loadProgram()
+
+finish = vM.run()
+
+print finish
+
+
+print '\n\n\n\n\n\n\n\n\n'

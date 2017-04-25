@@ -212,8 +212,8 @@ def generateDoWhileGotoTQuadruple():
     quadrupleManager.addQuadruple(operators['gotoT'], operandsStack.pop(), ' ', jumpStack.pop())#TODO decide what to do with goto operator code
 
 #function to generate a new return quadruple
-def generateReturnQuadruple():
-    quadrupleManager.addQuadruple(operators['return'], ' ', ' ', getVariableFromFunction(getLastFunction(), 'global').getMemory())
+def generateReturnQuadruple(returnValue):
+    quadrupleManager.addQuadruple(operators['return'], returnValue, ' ', getVariableFromFunction(getLastFunction(), 'global').getMemory())
 
 #function to generate ERA quadruple
 def generateERAQuadruple(function):
@@ -230,7 +230,7 @@ def generateParamQuadruple(function, k):
     if typesStack.pop() != var.getType():
         return 0
     else:
-        quadrupleManager.addQuadruple(operators['param'], operandsStack.pop(), ' ', varName)#TODO replace for memory
+        quadrupleManager.addQuadruple(operators['param'], operandsStack.pop(), ' ', var.getMemory())#TODO replace for memory - done
         return 1
 
 #function to generate ver on dimension check
@@ -407,6 +407,39 @@ def p_array_u(p):
         generateAddBaseMemoryQuadruple(var.getMemory()) #add base to index TODO to differentiate from memory
         operatorsStack.pop() # clear false bottom
         dimensionStack.pop() #removes dimension
+    else:
+        if p[-1] != ']':#if not a function name and not using array then you are going to use an var id
+            varId = operandsStack.pop()
+            if onGlobalScope() :
+                if not varExistsOnFunction(varId, 'global'):
+                    error('var '+varId+' not defined on line', p.lineno(-2))
+                else:
+                    var = getVariableFromFunction(varId, 'global')
+                    if len(var.getDimension()) > 0: #id is an array and is being used as normal var
+                        error('var '+varId+' is an array, on line', p.lineno(-2))
+                    typesStack.append(var.getType())
+                    #operandsStack.append(p[-1])
+                    operandsStack.append(var.getMemory())
+            else : #function scope
+                if not varExistsOnFunction(varId, getLastFunction()):# var not declared on local
+                    if not varExistsOnFunction(varId, 'global'): #var not declared on global
+                        error('var '+varId+' not defined on line', p.lineno(-2))
+                    else : #var used from global scope
+                        var = getVariableFromFunction(varId, 'global')
+                        if len(var.getDimension()) > 0: #id is an array and is being used as normal var
+                            error('var '+varId+' is an array, on line', p.lineno(-2))
+
+                        typesStack.append(var.getType())
+                        #operandsStack.append(p[-1])
+                        operandsStack.append(var.getMemory())
+                else:#variable used on local scope
+                    var = getVariableFromFunction(varId, getLastFunction())
+                    if len(var.getDimension()) > 0: #id is an array and is being used as normal var
+                        error('var '+varId+' is an array, on line', p.lineno(-2))
+
+                    typesStack.append(var.getType())
+                    #operandsStack.append(p[-1])
+                    operandsStack.append(var.getMemory())
 
 def p_array_used(p):# only called first time you use first dimension
     'array_used :   '
@@ -495,27 +528,6 @@ def p_function(p):
         paramsStack.pop()# params setted
 
 
-    else :#if not a function name then you are going to use an var id
-        if onGlobalScope() :
-            if not varExistsOnFunction(p[-2], 'global'):
-                error('var '+p[-2]+' not defined on line', p.lineno(-2))
-            else:
-                typesStack.append(getVariableFromFunction(p[-2], 'global').getType())
-                #operandsStack.append(p[-1])
-                operandsStack.append(getVariableFromFunction(p[-2], 'global').getMemory())
-        else : #function scope
-            if not varExistsOnFunction(p[-2], getLastFunction()):# var not declared on local
-                if not varExistsOnFunction(p[-2], 'global'): #var not declared on global
-                    error('var '+p[-2]+' not defined on line', p.lineno(-2))
-                else : #var used from global scope
-                    typesStack.append(getVariableFromFunction(p[-2], 'global').getType())
-                    #operandsStack.append(p[-1])
-                    operandsStack.append(getVariableFromFunction(p[-2], 'global').getMemory())
-            else:#variable used on local scope
-                typesStack.append(getVariableFromFunction(p[-2], getLastFunction()).getType())
-                #operandsStack.append(p[-1])
-                operandsStack.append(getVariableFromFunction(p[-2], getLastFunction()).getMemory())
-
 def p_function_called(p):
     'function_called :  '
     # using a function
@@ -542,7 +554,7 @@ def p_param_passed(p):
         error('function %s needs %s elements, %s given, on line '%(functionId, paramsNo, lookParamStack()[functionId]),p.lineno(0))
     else:
         if generateParamQuadruple(functionId, lookParamStack()[functionId])  == 0: #Quadruple generated
-            error('Type mismatch on line ', p.lineno(0))
+            error('Type mismatch on line ', p.lineno(0))#//TODO add error message on type
 
 
 
@@ -940,7 +952,7 @@ def p_do_while_then(p):
 #return statement
 def p_return_statute(p):
     '''return_statute :   RETURN expression SEMICOLON'''
-    #typesStack.pop() TODO dont remember why pop
+    #typesStack.pop() TODO dont remember why pop i think i already solved
     #add var with function name to global scope
     addVariableToFunction(getLastFunction(), 'global')
     rType = functionTable.getFunction(getLastFunction()).getReturnType()
@@ -955,8 +967,11 @@ def p_return_statute(p):
         functionTable.getFunction('global').increaseBooleanLocalMemoryRequired(1)
         getVariableFromFunction(getLastFunction(), 'global').setMemory(memoryManager.globalM.requestBooleanMemory(1))
 
+    typeGiven = typesStack.pop()
+    if rType != typeGiven:
+        error("return type must be %s, %s given on function %s, on line "%(TYPES.keys()[TYPES.values().index(rType)], TYPES.keys()[TYPES.values().index(typeGiven)], getLastFunction()),p.lineno(0))
 
-    generateReturnQuadruple()
+    generateReturnQuadruple(operandsStack.pop())
     memoryManager.clearMemory()
     fStack.pop()# function defined so we remove it from the stack
 

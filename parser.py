@@ -9,6 +9,7 @@ from memory import memoryManager
 from quadruple import QuadrupleManager
 from virtual_machine import VirtualMachine
 
+status = True
 
 #generates new function table
 functionTable = FunctionTable()
@@ -244,6 +245,20 @@ def generateAuxArrayFunction(mDimension):
     temp = memoryManager.tempM.requestIntMemory(1)
     quadrupleManager.addQuadruple(operators['*'], operandsStack.pop(), mDimension, temp)#TODO check when to delete temps and change mDimension for memory
     operandsStack.append(temp)
+    if onGlobalScope():
+        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+    else :
+        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
+    typesStack.append(TYPES['int'])#aux always generate int
+
+def generateAddBaseMemoryQuadruple(baseMemory):
+    temp = memoryManager.tempM.requestIntMemory(1)
+    quadrupleManager.addQuadruple(operators['+'], operandsStack.pop(), baseMemory, temp)
+    operandsStack.append(temp)
+    if onGlobalScope():
+        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+    else :
+        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
     typesStack.append(TYPES['int'])#aux always generate int
 
 # Get the token map from the lexer.  This is required.
@@ -377,34 +392,50 @@ def p_dimension_added(p):
 def p_array_u(p):
     '''array_u :      LBRACKET array_used expression array_dimension_used RBRACKET array_u
                     | empty'''
+    if p[1] == '[' and p[-1] != ']': # dimension finishs and is first time
+        varId = next(iter(lookDimensionStack()))
+        if onGlobalScope():
+            var = getVariableFromFunction(varId, 'global')
+        else :
+            if varExistsOnFunction(varId, getLastFunction()):
+                var = getVariableFromFunction(varId, getLastFunction()) #exists on local
+            else :#exists on global
+                var = getVariableFromFunction(varId, 'global')
 
-def p_array_used(p):
+        if lookDimensionStack()[varId] != len(var.getDimension()):
+            error("var %s has %s dimensions, %s given "%(varId, len(var.getDimension()), lookDimensionStack()[varId]), p.lineno(-1))
+        generateAddBaseMemoryQuadruple(var.getMemory()) #add base to index TODO to differentiate from memory
+        operatorsStack.pop() # clear false bottom
+        dimensionStack.pop() #removes dimension
+
+def p_array_used(p):# only called first time you use first dimension
     'array_used :   '
     if p[-1] == '[':
-        if lookDimensionStack() is None: # dimension stack empty
-            dimensionStack.append({p[-2] : 0})# first dimension
+        if p[-2] != ']': #first dimension
+            varName = operandsStack.pop()# removes id added in id_used
+            dimensionStack.append({varName : 0})# first dimension
             operatorsStack.append(FALSE_BOTTOM)
             if onGlobalScope():
-                if not varExistsOnFunction(p[-2], 'global'):
-                    error("var %s is not declared "%(p[-2]), p.lineno(-1))
+                if not varExistsOnFunction(varName, 'global'):
+                    error("var %s is not declared "%(varName), p.lineno(-1))
                 var = getVariableFromFunction(p[-2], 'global')
                 if len(var.getDimension()) <= 0:
-                    error("var %s is not an array, on line "%(p[-2]), p.lineno(-1))
+                    error("var %s is not an array, on line "%(varName), p.lineno(-1))
                 # is dimension variable on global
 
             else :
-                if not varExistsOnFunction(p[-2], getLastFunction()):# var not declared on local
-                    if not varExistsOnFunction(p[-2], 'global'): #var not declared on global
-                        error('var '+p[-2]+' not defined on line', p.lineno(-1))
+                if not varExistsOnFunction(varName, getLastFunction()):# var not declared on local
+                    if not varExistsOnFunction(varName, 'global'): #var not declared on global
+                        error('var '+varName+' not defined on line', p.lineno(-1))
                     else : #var on global #TODO change pop on term id
-                        var = getVariableFromFunction(p[-2], 'global')
+                        var = getVariableFromFunction(varName, 'global')
                         if len(var.getDimension()) <= 0:
-                            error("var %s is not an array, on line "%(p[-2]), p.lineno(-1))
+                            error("var %s is not an array, on line "%(varName), p.lineno(-1))
 
                 else: #var exits on local
-                    var = getVariableFromFunction(p[-2], getLastFunction())
+                    var = getVariableFromFunction(varName, getLastFunction())
                     if len(var.getDimension()) <= 0:
-                        error("var %s is not an array, on line "%(p[-2]), p.lineno(-1))
+                        error("var %s is not an array, on line "%(varName), p.lineno(-1))
 
 
 
@@ -412,6 +443,11 @@ def p_array_used(p):
 def p_array_dimension_used(p):
     'array_dimension_used :     '
     varId = next(iter(lookDimensionStack()))
+
+    #for d in dimensionStack:
+    #    print d
+    #print '||||'
+
     if onGlobalScope():
         var = getVariableFromFunction(varId, 'global')
     else :
@@ -420,6 +456,10 @@ def p_array_dimension_used(p):
         else :#exists on global
             var = getVariableFromFunction(varId, 'global')
 
+    if lookDimensionStack()[varId] > len(var.getDimension()) - 1:
+        error("array %s only have %s dimensions, on line "%(varId, len(var.getDimension())), p.lineno(-1))
+
+
     dimension = var.getDimension()[lookDimensionStack()[varId]]
     if generateVerifyQuadruple(dimension.size) == -1:# TODO check if verify uses memory
         error("arrays must be accessed by an int, %s given in var %s, on line "%(TYPES.keys()[TYPES.values().index(getLastType())], varId), p.lineno(-1))
@@ -427,77 +467,96 @@ def p_array_dimension_used(p):
     #verify quadruple generated
 
     if len(var.getDimension()) - 1 > lookDimensionStack()[varId]: #has more dimensions
-        generateAuxArrayFunction(dimension.m)
+        generateAuxArrayFunction(dimension.m) #generates auxiliar a.k.a. s*m
+
+    if lookDimensionStack()[varId] + 1 > 1:# is not first dimension
+        # generates auxs sum a.k.a. s1*m1 + s1*m2 ...
+        generateOperatorNextQuadruple(operators['+'])
+
+    d = dimensionStack.pop()[varId]
+    dimensionStack.append({varId : d+1 }) # dimensionStack updated with new dimension
 
 #possible function use as expression
 def p_function(p):
     '''function :         LPAREN function_called params RPAREN
                         | array_u'''
-    if p[1] == '(':
-        generateGoSubQuadruple(p[-1])
-        functionCalled = functionTable.getFunction(p[-1]) #function called
-        typesStack.append(functionCalled.getReturnType())
-        #operandsStack.append(operandsStack.pop()) #TODO checks this
-        #TODO release memory after return
+    if p[1] == '(': #function call ended
+        functionId = next(iter(lookParamStack()))
+        paramsNo = len (functionTable.getFunction(functionId).getParams())
+        if lookParamStack()[functionId]  != paramsNo:
+            error('function %s needs %s elements, %s given, on line '%(functionId, paramsNo, lookParamStack()[functionId]),p.lineno(0))
+
+        generateGoSubQuadruple(functionId)
+        functionCalled = functionTable.getFunction(functionId) #function called
+
+        operandsStack.append((getVariableFromFunction(functionId, 'global').getMemory()))#add return value to stack
+        typesStack.append((getVariableFromFunction(functionId, 'global').getType()))
+
+        paramsStack.pop()# params setted
 
 
     else :#if not a function name then you are going to use an var id
         if onGlobalScope() :
-            if not varExistsOnFunction(p[-1], 'global'):
-                error('var '+p[-1]+' not defined on line', p.lineno(-1))
+            if not varExistsOnFunction(p[-2], 'global'):
+                error('var '+p[-2]+' not defined on line', p.lineno(-2))
             else:
-                typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
+                typesStack.append(getVariableFromFunction(p[-2], 'global').getType())
                 #operandsStack.append(p[-1])
-                operandsStack.append(getVariableFromFunction(p[-1], 'global').getMemory())
+                operandsStack.append(getVariableFromFunction(p[-2], 'global').getMemory())
         else : #function scope
-            if not varExistsOnFunction(p[-1], getLastFunction()):# var not declared on local
-                if not varExistsOnFunction(p[-1], 'global'): #var not declared on global
-                    error('var '+p[-1]+' not defined on line', p.lineno(-1))
+            if not varExistsOnFunction(p[-2], getLastFunction()):# var not declared on local
+                if not varExistsOnFunction(p[-2], 'global'): #var not declared on global
+                    error('var '+p[-2]+' not defined on line', p.lineno(-2))
                 else : #var used from global scope
-                    typesStack.append(getVariableFromFunction(p[-1], 'global').getType())
+                    typesStack.append(getVariableFromFunction(p[-2], 'global').getType())
                     #operandsStack.append(p[-1])
-                    operandsStack.append(getVariableFromFunction(p[-1], 'global').getMemory())
+                    operandsStack.append(getVariableFromFunction(p[-2], 'global').getMemory())
             else:#variable used on local scope
-                typesStack.append(getVariableFromFunction(p[-1], getLastFunction()).getType())
+                typesStack.append(getVariableFromFunction(p[-2], getLastFunction()).getType())
                 #operandsStack.append(p[-1])
-                operandsStack.append(getVariableFromFunction(p[-1], getLastFunction()).getMemory())
+                operandsStack.append(getVariableFromFunction(p[-2], getLastFunction()).getMemory())
 
 def p_function_called(p):
     'function_called :  '
     # using a function
     if p[-1] == '(':#function call/reference
         #checks functions exists
-        if not functionExists( p[-2] ):
-            error('function ' + p[-2] + ' not declared on line', p.lineno(-1))
+        var = operandsStack.pop()# function name
+        if not functionExists( var ):
+            error('function ' + var + ' not declared on line', p.lineno(-1))
         else:
-            generateERAQuadruple(p[-2])
+            generateERAQuadruple(var)
+        paramsStack.append({var : 1}) #params counter
 
 #params to be used on function call
 def p_params(p):
     '''params :       expression param_passed mult_params
                     | empty'''
 
-#used to know when a paramete has been passed to the function call
+#used to know when a parameter has been passed to the function call
 def p_param_passed(p):
     'param_passed :     '
-    k = 1 #TODO check this thing, it works!!!! yeah
-    functionName = p[k*(-3) - 1]#TODO delicate. It counts the tokens
-    while functionName is None :
-        k += 1
-        functionName = p[k*(-3)  - 1] #if dont get name then go three space backwards to get id
-    paramsNo = len (functionTable.getFunction(functionName).getParams())
-    if k  > paramsNo:
-        error('function %s needs %s elements, %s given, on line '%(functionName, paramsNo, k),p.lineno(0))
-
-    if generateParamQuadruple(functionName, k)  == 0: #Quadruple generated
-        error('Type mismatch on line ', p.lineno(0))
+    functionId = next(iter(lookParamStack()))
+    paramsNo = len (functionTable.getFunction(functionId).getParams())
+    if lookParamStack()[functionId]  > paramsNo:
+        error('function %s needs %s elements, %s given, on line '%(functionId, paramsNo, lookParamStack()[functionId]),p.lineno(0))
+    else:
+        if generateParamQuadruple(functionId, lookParamStack()[functionId])  == 0: #Quadruple generated
+            error('Type mismatch on line ', p.lineno(0))
 
 
 
 #multiple params to be used on function call
 def p_mult_params(p):
-    '''mult_params :      COMMA params
+    '''mult_params :      COMMA next_param params
                         | empty'''
+
+def p_next_param(p):
+    'next_param :   '
+    functionId = next(iter(lookParamStack()))
+    paramN = paramsStack.pop()[functionId]
+    paramsStack.append({functionId : paramN+1}) #params stack updated
+
 
 #assignation of a int variable
 def p_int_assignation(p):
@@ -539,7 +598,7 @@ def p_boolean_assignation(p):
 
 #unknown variable assignation
 def p_assignation_statute(p):
-    '''assignation_statute : ID array_u ASSIGN expression SEMICOLON'''
+    '''assignation_statute : ID id_used array_u ASSIGN expression SEMICOLON'''
     if onGlobalScope():
         if not varExistsOnFunction(p[1], 'global'):
             error('variable '+p[1]+ ' not declared on line', p.lineno(1))
@@ -667,12 +726,15 @@ def p_term(p):
     '''term :         CONST_INT term_int_used
                     | CONST_DOUBLE term_double_used
                     | CONST_BOOLEAN term_boolean_used
-                    | ID function
+                    | ID id_used function
                     | LPAREN term_parenthesis_used logical RPAREN'''
     #remove false bottom
     if p[1] == '(': #TODO check if works properly.... it seems so
         operatorsStack.pop()
 
+def p_id_used(p):
+    'id_used :      '
+    operandsStack.append(p[-1]) #adds id
 
 #rule to identify the used type
 def p_term_int_used(p):
@@ -900,7 +962,7 @@ def p_return_statute(p):
 
 #function statute
 def p_function_statute(p):
-    '''function_statute :   ID LPAREN function_called params RPAREN SEMICOLON'''
+    '''function_statute :   ID id_used LPAREN function_called params RPAREN SEMICOLON'''
     generateGoSubQuadruple(p[1])
 #TODO check or delete to join with function called from expression
 
@@ -971,6 +1033,8 @@ def p_circle_statute(p):
 
 #error flag
 def error(message, line = None):
+    global status
+    status = False
     if line :
         message += ' on line '+str(line);
     print message;
@@ -996,6 +1060,8 @@ parser.defaulted_states = {};
 file = open("parser_test.txt", "r")
 parser.parse( file.read() )
 
+
+#if status :
 printSummary()
 printQuadruples()
 

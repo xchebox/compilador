@@ -232,6 +232,20 @@ def generateParamQuadruple(function, k):
         quadrupleManager.addQuadruple(operators['param'], operandsStack.pop(), ' ', varName)#TODO replace for memory
         return 1
 
+#function to generate ver on dimension check
+def generateVerifyQuadruple(dimension):
+    resultType = semantic_cube[getLastType()][operators['verify']][TYPES['int']]
+    if resultType == -1: #TODO add checks to boolena in if and while on decide to use int and doubles as booleans
+        return -1
+    quadrupleManager.addQuadruple(operators['verify'], getLastOperand(), dimension, ' ')
+    return 1
+
+def generateAuxArrayFunction(mDimension):
+    temp = memoryManager.tempM.requestIntMemory(1)
+    quadrupleManager.addQuadruple(operators['*'], operandsStack.pop(), mDimension, temp)#TODO check when to delete temps and change mDimension for memory
+    operandsStack.append(temp)
+    typesStack.append(TYPES['int'])#aux always generate int
+
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
 
@@ -361,12 +375,59 @@ def p_dimension_added(p):
 
 #possible array use
 def p_array_u(p):
-    '''array_u :      LBRACKET array_used expression RBRACKET array_u
+    '''array_u :      LBRACKET array_used expression array_dimension_used RBRACKET array_u
                     | empty'''
 
 def p_array_used(p):
-    'array_used :     '
+    'array_used :   '
+    if p[-1] == '[':
+        if lookDimensionStack() is None: # dimension stack empty
+            dimensionStack.append({p[-2] : 0})# first dimension
+            operatorsStack.append(FALSE_BOTTOM)
+            if onGlobalScope():
+                if not varExistsOnFunction(p[-2], 'global'):
+                    error("var %s is not declared "%(p[-2]), p.lineno(-1))
+                var = getVariableFromFunction(p[-2], 'global')
+                if len(var.getDimension()) <= 0:
+                    error("var %s is not an array, on line "%(p[-2]), p.lineno(-1))
+                # is dimension variable on global
 
+            else :
+                if not varExistsOnFunction(p[-2], getLastFunction()):# var not declared on local
+                    if not varExistsOnFunction(p[-2], 'global'): #var not declared on global
+                        error('var '+p[-2]+' not defined on line', p.lineno(-1))
+                    else : #var on global #TODO change pop on term id
+                        var = getVariableFromFunction(p[-2], 'global')
+                        if len(var.getDimension()) <= 0:
+                            error("var %s is not an array, on line "%(p[-2]), p.lineno(-1))
+
+                else: #var exits on local
+                    var = getVariableFromFunction(p[-2], getLastFunction())
+                    if len(var.getDimension()) <= 0:
+                        error("var %s is not an array, on line "%(p[-2]), p.lineno(-1))
+
+
+
+
+def p_array_dimension_used(p):
+    'array_dimension_used :     '
+    varId = next(iter(lookDimensionStack()))
+    if onGlobalScope():
+        var = getVariableFromFunction(varId, 'global')
+    else :
+        if varExistsOnFunction(varId, getLastFunction()):
+            var = getVariableFromFunction(varId, getLastFunction()) #exists on local
+        else :#exists on global
+            var = getVariableFromFunction(varId, 'global')
+
+    dimension = var.getDimension()[lookDimensionStack()[varId]]
+    if generateVerifyQuadruple(dimension.size) == -1:# TODO check if verify uses memory
+        error("arrays must be accessed by an int, %s given in var %s, on line "%(TYPES.keys()[TYPES.values().index(getLastType())], varId), p.lineno(-1))
+
+    #verify quadruple generated
+
+    if len(var.getDimension()) - 1 > lookDimensionStack()[varId]: #has more dimensions
+        generateAuxArrayFunction(dimension.m)
 
 #possible function use as expression
 def p_function(p):
@@ -376,7 +437,7 @@ def p_function(p):
         generateGoSubQuadruple(p[-1])
         functionCalled = functionTable.getFunction(p[-1]) #function called
         typesStack.append(functionCalled.getReturnType())
-        operandsStack.append(operandsStack.pop()) #TODO change for memory
+        #operandsStack.append(operandsStack.pop()) #TODO checks this
         #TODO release memory after return
 
 
@@ -763,7 +824,7 @@ def p_if_statute(p):
 def p_then(p):
     'then :          '
     if typesStack.pop() != TYPES['boolean']:
-        error('Semantic error on if statute on line ', p.lineno(0))
+        error('Semantic error in if statute on line ', p.lineno(0))
     else:
         #actual boolean expression
         generateGotoFQuadruple()

@@ -16,6 +16,7 @@ operators = {
     'era'       : 14,
     'goSub'     : 15,
     'param'     : 16,
-    'end'       : 17
+    'end'       : 17,
+    'verify'    : 18
 
 }

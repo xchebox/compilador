@@ -59,9 +59,6 @@ class Variable:
             d.m = totalMemory/d.size#calculates all m's
         self.dimension[len(self.dimension) - 1].m = 0 #last dimension m's 0
 
-        for d in self.dimension:
-            print d.m
-
         return  self.dimension[0].m * self.dimension[0].size #Total size
 
     def getDimension(self):

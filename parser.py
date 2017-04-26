@@ -9,7 +9,7 @@ from memory import memoryManager
 from quadruple import QuadrupleManager
 from virtual_machine import VirtualMachine
 
-status = True
+status = True #used to run virtual machine when is not error flag
 
 #generates new function table
 functionTable = FunctionTable()
@@ -71,6 +71,19 @@ def printQuadruples():
 
     print "\n\n\n\n"
 
+def printMemorySegmentMap():
+    for k in functionTable.table:# iterates over function table
+        if k != 'global':
+            f = functionTable.table[k]
+            print '%s.l,%s,%s,%s.c,%s,%s,%s.t,%s,%s,%s'%(k, f.getIntLocalMemoryRequired(),
+            f.getDoubleLocalMemoryRequired(),
+            f.getBooleanLocalMemoryRequired(),
+            f.getIntConstMemoryRequired(),
+            f.getDoubleConstMemoryRequired(),
+            f.getBooleanConstMemoryRequired(),
+            f.getIntTempMemoryRequired(),
+            f.getDoubleTempMemoryRequired(),
+            f.getBooleanTempMemoryRequired())
 
 
 
@@ -288,8 +301,14 @@ def p_main_declared(p):
 
 #global_declaration
 def p_global_declaration(p):
-    '''global_declaration :       declaration_statute  global_declaration
+    '''global_declaration :       new_global_declaration'''
+    #global declaration has ended
+    memoryManager.clearMemory()
+
+def p_new_global_declaration(p):
+    '''new_global_declaration :    declaration_statute  new_global_declaration
                                 |  empty'''
+
 
 #declaration
 def p_declaration_statute(p):
@@ -1076,20 +1095,21 @@ file = open("parser_test.txt", "r")
 parser.parse( file.read() )
 
 
-#if status :
-printSummary()
-printQuadruples()
+if status :
+#printSummary()
+#printQuadruples()
+    printMemorySegmentMap()
 
-writeQuadruples()
-memoryManager.prepareMemory()
+    writeQuadruples()
+    memoryManager.prepareMemory()
 
-vM = VirtualMachine()
+    vM = VirtualMachine()
 
-vM.loadProgram()
+    vM.loadProgram()
 
-finish = vM.run()
+    finish = vM.run()
 
-print finish
+    print finish
 
 
 print '\n\n\n\n\n\n\n\n\n'

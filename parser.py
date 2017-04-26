@@ -60,6 +60,7 @@ def writeSummary():
 
 def writeQuadruples():
     quadruple = open("./out/quadruple.cp", "w")
+    quadruple.write(writeMemorySegmentMap())
     for q in quadrupleManager.quadrupleStack:
         quadruple.write ("%s,%s,%s,%s\n" % (q.operator, q.firstOperand, q.secondOperand, q.result))
 
@@ -75,7 +76,7 @@ def printMemorySegmentMap():
     for k in functionTable.table:# iterates over function table
         if k != 'global':
             f = functionTable.table[k]
-            print '%s.l,%s,%s,%s.c,%s,%s,%s.t,%s,%s,%s'%(k, f.getIntLocalMemoryRequired(),
+            print '%s.%s,%s,%s,%s,%s,%s,%s,%s,%s'%(k, f.getIntLocalMemoryRequired(),
             f.getDoubleLocalMemoryRequired(),
             f.getBooleanLocalMemoryRequired(),
             f.getIntConstMemoryRequired(),
@@ -85,7 +86,23 @@ def printMemorySegmentMap():
             f.getDoubleTempMemoryRequired(),
             f.getBooleanTempMemoryRequired())
 
-
+def writeMemorySegmentMap():
+    s= ''
+    for k in functionTable.table:# iterates over function table
+        if k != 'global':
+            f = functionTable.table[k]
+            s += '%s.%s,%s,%s,%s,%s,%s,%s,%s,%s.'%(k, f.getIntLocalMemoryRequired(),
+            f.getDoubleLocalMemoryRequired(),
+            f.getBooleanLocalMemoryRequired(),
+            f.getIntConstMemoryRequired(),
+            f.getDoubleConstMemoryRequired(),
+            f.getBooleanConstMemoryRequired(),
+            f.getIntTempMemoryRequired(),
+            f.getDoubleTempMemoryRequired(),
+            f.getBooleanTempMemoryRequired())
+    s = s[:-1] # remove last point. is not neccesary because there is not another function
+    s += '\n'#appends new line to strig
+    return s
 
 #checks if function exists
 def functionExists(key):
@@ -772,7 +789,7 @@ def p_term_int_used(p):
     'term_int_used :     '
     #constants have  size 1
     const = memoryManager.consM.requestIntMemory(1)
-    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['int'])
+    #memoryManager.consM.writeOnMemory(const, p[-1], TYPES['int'])
     operandsStack.append(const)
     #type added to stack
     typesStack.append(TYPES['int'])
@@ -784,7 +801,7 @@ def p_term_double_used(p):
     'term_double_used :     '
     #constants have  size 1
     const = memoryManager.consM.requestDoubleMemory(1)
-    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['double'])
+    #memoryManager.consM.writeOnMemory(const, p[-1], TYPES['double'])
     operandsStack.append(const)
 
     #type added to stack
@@ -797,7 +814,7 @@ def p_term_boolean_used(p):
     'term_boolean_used :     '
     #constants have  size 1
     const = memoryManager.consM.requestBooleanMemory(1)
-    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['boolean'])
+    #memoryManager.consM.writeOnMemory(const, p[-1], TYPES['boolean'])
     operandsStack.append(const)
 
     #type added to stack
@@ -1096,12 +1113,11 @@ parser.parse( file.read() )
 
 
 if status :
-#printSummary()
-#printQuadruples()
-    printMemorySegmentMap()
+    #printSummary()
+    printQuadruples()
+    #printMemorySegmentMap()
 
     writeQuadruples()
-    memoryManager.prepareMemory()
 
     vM = VirtualMachine()
 

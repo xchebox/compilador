@@ -12,22 +12,84 @@ class MemoryManager:
         self.localM = Memory(9000, 300, 10000, 300, 11000, 300)
 
 
-    def prepareMemory(self):
-        self.memory = dict(self.consM.integerStack.items()+self.consM.doubleStack.items()+self.consM.booleanStack.items()
-        +self.tempM.integerStack.items()+self.tempM.doubleStack.items()+self.tempM.booleanStack.items()
-        +self.globalM.integerStack.items()+self.globalM.doubleStack.items()+self.globalM.booleanStack.items()
-        +self.localM.integerStack.items()+self.localM.doubleStack.items()+self.localM.booleanStack.items())
-
-
-
-
     #sets the value into the memory space
     def writeOnMemory(self, memory, value):
-        self.memory[int(memory)] = value
+        if memory >= 0 and memory < 500:
+            #print "int constant"
+            self.consM.writeOnMemory(memory, value, TYPES['int'])
+        if memory >= 500 and memory < 1000:
+            #print "double constant"
+            self.consM.writeOnMemory(memory, value, TYPES['double'])
+        if memory >= 1000 and memory < 2000:
+            #print "boolean constant"
+            self.consM.writeOnMemory(memory, value, TYPES['boolean'])
+        if memory >= 2000 and memory < 3000:
+            #print "int temp"
+            self.tempM.writeOnMemory(memory, value, TYPES['int'])
+        if memory >= 3000 and memory < 4000:
+            #print "double temp"
+            self.tempM.writeOnMemory(memory, value, TYPES['double'])
+        if memory >= 4000 and memory < 5000:
+            #print "boolean temp"
+            self.tempM.writeOnMemory(memory, value, TYPES['boolean'])
+        if memory >= 5000 and memory < 5600:
+            #print "int global"
+            self.globalM.writeOnMemory(memory, value, TYPES['int'])
+        if memory >= 5600 and memory < 6000:
+            #print "double global"
+            self.globalM.writeOnMemory(memory, value, TYPES['double'])
+        if memory >= 6000 and memory < 9000:
+            #print "boolean global"
+            self.globalM.writeOnMemory(memory, value, TYPES['boolean'])
+        if memory >= 9000 and memory < 10000:
+            #print "int local"
+            self.localM.writeOnMemory(memory, value, TYPES['int'])
+        if memory >= 10000 and memory < 11000:
+            #print "double local"
+            self.localM.writeOnMemory(memory, value, TYPES['double'])
+        if memory >= 11000 :
+            #print "boolean local"
+            self.localM.writeOnMemory(memory, value, TYPES['boolean'])
 
     #reads the value from the memory space
     def readFromMemory(self, memory):
-        return self.memory[int(memory)]
+        if memory >= 0 and memory < 500:
+            #print "int constant"
+            return self.consM.readFromMemory(memory, TYPES['int'])
+        if memory >= 500 and memory < 1000:
+            #print "double constant"
+            return self.consM.readFromMemory(memory, TYPES['double'])
+        if memory >= 1000 and memory < 2000:
+            #print "boolean constant"
+            return self.consM.readFromMemory(memory, TYPES['boolean'])
+        if memory >= 2000 and memory < 3000:
+            #print "int temp"
+            return self.tempM.readFromMemory(memory, TYPES['int'])
+        if memory >= 3000 and memory < 4000:
+            #print "double temp"
+            return self.tempM.readFromMemory(memory, TYPES['double'])
+        if memory >= 4000 and memory < 5000:
+            #print "boolean temp"
+            return self.tempM.readFromMemory(memory, TYPES['boolean'])
+        if memory >= 5000 and memory < 5600:
+            #print "int global"
+            return self.globalM.readFromMemory(memory, TYPES['int'])
+        if memory >= 5600 and memory < 6000:
+            #print "double global"
+            return self.globalM.readFromMemory(memory, TYPES['double'])
+        if memory >= 6000 and memory < 9000:
+            #print "boolean global"
+            return self.globalM.readFromMemory(memory, TYPES['boolean'])
+        if memory >= 9000 and memory < 10000:
+            #print "int local"
+            return self.localM.readFromMemory(memory, TYPES['int'])
+        if memory >= 10000 and memory < 11000:
+            #print "double local"
+            return self.localM.readFromMemory(memory, TYPES['double'])
+        if memory >= 11000 :
+            #print "boolean local"
+            return self.localM.readFromMemory(memory, TYPES['boolean'])
+        return None
 
 
     #clear local and temporal memory and constant memory

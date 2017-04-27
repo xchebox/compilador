@@ -209,6 +209,7 @@ def generateOperatorNextQuadruple(operator):
                 return 0
     return -1
 
+
 #generates an assignation quadruple. Var is the variable that is going to be assigned
 def generateAsignationNextQuadruple(varMemory, varType, id):
     resultType = semantic_cube[typesStack.pop()][operators['=']][varType]
@@ -273,23 +274,50 @@ def generateVerifyQuadruple(dimension):
 
 def generateAuxArrayFunction(mDimension):
     temp = memoryManager.tempM.requestIntMemory(1)
-    quadrupleManager.addQuadruple(operators['*'], operandsStack.pop(), mDimension, temp)#TODO check when to delete temps and change mDimension for memory
+    quadrupleManager.addQuadruple(operators['*'], operandsStack.pop(), "*%s"%mDimension, temp)#TODO check when to delete temps and change mDimension for memory
     operandsStack.append(temp)
     if onGlobalScope():
         functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
     else :
         functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
-    typesStack.append(TYPES['int'])#aux always generate int
+
+def generateSumDimensionFunction():
+    temp = memoryManager.tempM.requestIntMemory(1)
+    quadrupleManager.addQuadruple(operators['+'], operandsStack.pop(), operandsStack.pop(), temp)
+    operandsStack.append(temp)
+    if onGlobalScope():
+        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+    else :
+        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
+
+def generateSumAllDimensionsQuadruple():
+    temp = memoryManager.tempM.requestIntMemory(1)
+    quadrupleManager.addQuadruple(operators['+'], operandsStack.pop(), operandsStack.pop(), temp)
+    operandsStack.append(temp)
+    if onGlobalScope():
+        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+    else :
+        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
 
 def generateAddBaseMemoryQuadruple(baseMemory):
     temp = memoryManager.tempM.requestIntMemory(1)
-    quadrupleManager.addQuadruple(operators['+'], operandsStack.pop(), baseMemory, temp)
+    quadrupleManager.addQuadruple(operators['+'], operandsStack.pop(), "*%s"%baseMemory, temp)
     operandsStack.append(temp)
     if onGlobalScope():
         functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
     else :
         functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
-    typesStack.append(TYPES['int'])#aux always generate int
+
+def generateAsignationArrayQuadruple(varMemory, varType, id):
+    resultType = semantic_cube[typesStack.pop()][operators['=']][varType]
+    if  resultType != -1 : #can do operator
+        quadrupleManager.addQuadruple(operators['='], varMemory, ' ', "&%s"%operandsStack.pop())
+        return 1
+    else :
+        return 0
+
+    return -1
+
 
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
@@ -302,7 +330,7 @@ def p_program(p):
 #used to generate gotoMain quadruple
 def p_program_started (p):
     'program_started :      '
-    generateGoToMain()
+    #generateGoToMain()
 
 #main logic
 def p_main(p):
@@ -314,13 +342,15 @@ def p_main_declared(p):
     'main_declared :            '
     functionTable.addFunction('main')#function added to func table
     fStack.append('main');#main added from function stack
-    quadrupleManager.fillQuadrupleJump(0, quadrupleManager.getCounter())
+    quadrupleManager.fillQuadrupleJump(jumpStack.pop(), quadrupleManager.getCounter())
 
 #global_declaration
 def p_global_declaration(p):
     '''global_declaration :       new_global_declaration'''
     #global declaration has ended
     memoryManager.clearMemory()
+    jumpStack.append(quadrupleManager.getCounter())
+    generateGoToMain()
 
 def p_new_global_declaration(p):
     '''new_global_declaration :    declaration_statute  new_global_declaration
@@ -440,11 +470,20 @@ def p_array_u(p):
 
         if lookDimensionStack()[varId] != len(var.getDimension()):
             error("var %s has %s dimensions, %s given "%(varId, len(var.getDimension()), lookDimensionStack()[varId]), p.lineno(-1))
+        if lookDimensionStack()[varId] > 1:
+            generateSumAllDimensionsQuadruple()
+
         generateAddBaseMemoryQuadruple(var.getMemory()) #add base to index TODO to differentiate from memory
         operatorsStack.pop() # clear false bottom
         dimensionStack.pop() #removes dimension
+
+         # we have the memory on stack so we add a symbol to identify it
+         # at this point we have just used an array so the last item should be te memory
+        operandsStack.append('&%s'%operandsStack.pop())
+
+
     else:
-        if p[-1] != ']':#if not a function name and not using array then you are going to use an var id
+        if p[-1] != ']':#if not a function name and not using array then you are going to use as var id
             varId = operandsStack.pop()
             if onGlobalScope() :
                 if not varExistsOnFunction(varId, 'global'):
@@ -538,9 +577,9 @@ def p_array_dimension_used(p):
     if len(var.getDimension()) - 1 > lookDimensionStack()[varId]: #has more dimensions
         generateAuxArrayFunction(dimension.m) #generates auxiliar a.k.a. s*m
 
-    if lookDimensionStack()[varId] + 1 > 1:# is not first dimension
-        # generates auxs sum a.k.a. s1*m1 + s1*m2 ...
-        generateOperatorNextQuadruple(operators['+'])
+        if lookDimensionStack()[varId] + 1 > 1 :# is not first dimension
+            # generates auxs sum a.k.a. s1*m1 + s1*m2 ...
+            generateSumDimensionFunction()
 
     d = dimensionStack.pop()[varId]
     dimensionStack.append({varId : d+1 }) # dimensionStack updated with new dimension
@@ -653,22 +692,36 @@ def p_assignation_statute(p):
         else :
             # add info into from global scope
             var = getVariableFromFunction(p[1],'global')
-            if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
-                error('Type mismatch on line', p.lineno(1))
+            if len(var.dimension) > 0: #var is an array
+                if generateAsignationNextQuadruple(operandsStack.pop(), var.getType(), p[1]) == 0:
+                    error('Type mismatch on line', p.lineno(1))
+            else :
+                if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
+                    error('Type mismatch on line', p.lineno(1))
     else :
         if not varExistsOnFunction(p[1], getLastFunction()):
             if not varExistsOnFunction(p[1], 'global'):
                 error('variable '+p[1]+ ' not declared on line', p.lineno(1))
             else :
-                # add info into from global scope
                 var = getVariableFromFunction(p[1],'global')
-                if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
-                    error('Type mismatch on line', p.lineno(1))
+                if len(var.dimension) > 0: #var is an array
+                    if generateAsignationNextQuadruple(operandsStack.pop(), var.getType(), p[1]) == 0:
+                        error('Type mismatch on line', p.lineno(1))
+                else :
+                    var = getVariableFromFunction(p[1],'global')
+                    # add info into from global scope
+                    if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
+                        error('Type mismatch on line', p.lineno(1))
         else :
             # add into info from local scope
             var = getVariableFromFunction(p[1],getLastFunction())
-            if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
-                error('Type mismatch on line ', p.lineno(1))
+            if len(var.dimension) > 0: #var is an array
+                if generateAsignationNextQuadruple(operandsStack.pop(), var.getType(), p[1]) == 0:
+                    error('Type mismatch on line ', p.lineno(1))
+            else :
+                var = getVariableFromFunction(p[1],getLastFunction())
+                if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
+                    error('Type mismatch on line ', p.lineno(1))
 
 
 
@@ -680,8 +733,8 @@ def p_expression(p):
 #used to clear the stack. In theory before a new expression is called the older values are useless
 def p_clean_expressions(p):
     'clean_expressions :        '
-    del operandsStack[:]#TODO handle this. Is basic just for the return statement
-    del typesStack[:]
+    #del operandsStack[:]#TODO handle this. Is basic just for the return statement
+    #del typesStack[:]
 
 #logic
 def p_logical(p):
@@ -1108,7 +1161,8 @@ parser.defaulted_states = {};
 
 #file = open("parse_test_cycles.txt", "r")
 #file = open("parser_test_function.txt", "r")
-file = open("parser_test_vm.txt", "r")
+file = open("parser_test_array.txt", "r")
+#file = open("parser_test.txt", "r")
 parser.parse( file.read() )
 
 

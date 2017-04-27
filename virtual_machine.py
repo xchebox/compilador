@@ -15,13 +15,20 @@ class VirtualMachine:
 
 
     def readFromMemory(self, memory):
+        memory = int(memory)
         if memory >= 5000 and memory < 9000: #global memory
+            return gMemory.readFromMemory(memory)
+        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+            print gMemory.readFromMemory(memory)
             return gMemory.readFromMemory(memory)
         else :
             return self.mStack[len(self.mStack) - 1].readFromMemory(memory)
 
     def writeOnMemory(self, memory, value):
+        memory = int(memory)
         if memory >= 5000 and memory < 9000: #global memory
+            gMemory.writeOnMemory(memory, value)
+        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
             gMemory.writeOnMemory(memory, value)
         else:
             self.mStack[len(self.mStack) - 1].writeOnMemory(memory, value)
@@ -111,7 +118,12 @@ class VirtualMachine:
                 print self.readFromMemory(instruction.result)
 
             elif instruction.operator == operators['=']:
-                print '='
+                print instruction.firstOperand
+                if self.readFromMemory(instruction.firstOperand) is None:
+                    return 'Error, variable used but not assigned'
+                self.writeOnMemory(instruction.result,
+                self.readFromMemory(instruction.firstOperand))
+
             elif instruction.operator == operators['<']:
                 if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
                     return 'Error, variable used but not assigned'
@@ -154,16 +166,25 @@ class VirtualMachine:
                 self.readFromMemory(instruction.firstOperand) or
                 self.readFromMemory(instruction.secondOperand)
                 )
-                print self.readFromMemory(instruction.result)
 
             elif instruction.operator == operators['goto']:
-                self.pc = int(instruction.result) - 1
+                self.pc = int(instruction.result) #TODO remember why- 1
 
 
             elif instruction.operator == operators['gotoF']:
-                print 'gotoF'
+
+                if self.readFromMemory(instruction.firstOperand) is None:
+                    return 'Error, variable used but not assigned'
+                if not self.readFromMemory(instruction.firstOperand):
+                    self.pc = int(instruction.result)
+
             elif instruction.operator == operators['gotoT']:
-                print 'gotoT'
+
+                if self.readFromMemory(instruction.firstOperand) is None:
+                    return 'Error, variable used but not assigned'
+                if self.readFromMemory(instruction.firstOperand):
+                    self.pc = int(instruction.result)
+
             elif instruction.operator == operators['return']:
                 print 'return'
             elif instruction.operator == operators['era']:

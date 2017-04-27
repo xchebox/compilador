@@ -789,7 +789,7 @@ def p_term_int_used(p):
     'term_int_used :     '
     #constants have  size 1
     const = memoryManager.consM.requestIntMemory(1)
-    #memoryManager.consM.writeOnMemory(const, p[-1], TYPES['int'])
+    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['int']) #TODO remove this to manage constants
     operandsStack.append(const)
     #type added to stack
     typesStack.append(TYPES['int'])
@@ -801,7 +801,7 @@ def p_term_double_used(p):
     'term_double_used :     '
     #constants have  size 1
     const = memoryManager.consM.requestDoubleMemory(1)
-    #memoryManager.consM.writeOnMemory(const, p[-1], TYPES['double'])
+    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['double'])#TODO remove this to manage constants
     operandsStack.append(const)
 
     #type added to stack
@@ -814,7 +814,7 @@ def p_term_boolean_used(p):
     'term_boolean_used :     '
     #constants have  size 1
     const = memoryManager.consM.requestBooleanMemory(1)
-    #memoryManager.consM.writeOnMemory(const, p[-1], TYPES['boolean'])
+    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['boolean'])#TODO remove this to manage constants
     operandsStack.append(const)
 
     #type added to stack
@@ -1108,7 +1108,7 @@ parser.defaulted_states = {};
 
 #file = open("parse_test_cycles.txt", "r")
 #file = open("parser_test_function.txt", "r")
-file = open("parser_test.txt", "r")
+file = open("parser_test_vm.txt", "r")
 parser.parse( file.read() )
 
 

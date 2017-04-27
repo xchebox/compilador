@@ -99,7 +99,7 @@ class MemoryManager:
         #localMemory
         self.localM = Memory(9000, 300, 10000, 300, 11000, 300)
         #const memory
-        self.consM = Memory(0, 300, 500, 300, 1000, 300)
+        #elf.consM = Memory(0, 300, 500, 300, 1000, 300) TODO uncomment this and manage contant memory
 
 
 class Memory:
@@ -146,10 +146,16 @@ class Memory:
     #reads the value from the memory space
     def readFromMemory(self, memory, mType):
         if mType == TYPES['int']:
+            if not memory in self.integerStack:
+                return None
             return self.integerStack[memory]
         elif mType == TYPES['double']:
+            if not memory in self.doubleStack:
+                return None
             return self.doubleStack[memory]
         elif mType == TYPES['boolean']:
+            if not memory in self.booleanStack:
+                return None
             return self.booleanStack[memory]
 
     #different memory requests

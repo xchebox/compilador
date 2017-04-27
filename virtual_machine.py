@@ -49,6 +49,9 @@ class VirtualMachine:
     def isPointer(self,operand):
         return operand[0] == '&'
 
+    def isDirect(self,operand):
+        return operand[0] == '*'
+
     def loadProgram(self):
         file = open("./out/quadruple.cp", "r")
 
@@ -74,27 +77,26 @@ class VirtualMachine:
         self.loadMemory('main')#loads main memory segment
 
         while  self.instructions[self.pc].operator != operators['end']:
-            #print operators.keys()[operators.values().index(self.instructions[self.pc].operator)]
             instruction = self.instructions[self.pc]
+            #print operators.keys()[operators.values().index(self.instructions[self.pc].operator)]
+            #print instruction.result
             if instruction.operator == operators['+']:
 
-                if instruction.secondOperand[0] == '*': # is array aux. Do operation directly
-                    if self.readFromMemory(instruction.firstOperand) is None:
-                        return 'Error, variable used but not assigned'
-                    self.writeOnMemory(
-                    instruction.result,
-                    self.readFromMemory(instruction.firstOperand)+
-                    int(instruction.secondOperand.split('*')[1]))
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+                if self.isPointer(instruction.secondOperand): #contains array memory
+                    second = self.readFromMemory(self.readFromMemory(instruction.secondOperand.split('&')[1]))
+                elif self.isDirect(instruction.secondOperand): #is a direct value
+                    second = float(instruction.secondOperand.split('*')[1])
+                else :
+                    second = self.readFromMemory(instruction.secondOperand)
 
-                else:
-                    if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
-                        return 'Error, variable used but not assigned'
-
-                    self.writeOnMemory(
-                    instruction.result,
-                    self.readFromMemory(instruction.firstOperand)+
-                    self.readFromMemory(instruction.secondOperand)
-                    )
+                if first is None or second is None:
+                    print "f %s s %s"%(first, second)
+                    return 'Error, variable used but not assigned'
+                self.writeOnMemory(instruction.result,first + second)
 
             elif instruction.operator == operators['-']:
                 if self.isPointer(instruction.firstOperand): #contains array memory
@@ -109,46 +111,59 @@ class VirtualMachine:
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
 
-                self.writeOnMemory(result, first - second)
+                self.writeOnMemory(instruction.result, first - second)
 
             elif instruction.operator == operators['*']:
-                if instruction.secondOperand[0] == '*': # is array aux. Do operation directly
-                    if self.readFromMemory(instruction.firstOperand) is None:
-                        return 'Error, variable used but not assigned'
-                    self.writeOnMemory(
-                    instruction.result,
-                    self.readFromMemory(instruction.firstOperand)*
-                    int(instruction.secondOperand.split('*')[1]))
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+                if self.isPointer(instruction.secondOperand): #contains array memory
+                    second = self.readFromMemory(self.readFromMemory(instruction.secondOperand.split('&')[1]))
+                elif self.isDirect(instruction.secondOperand): #is a direct value
+                    second = float(instruction.secondOperand.split('*')[1])
+                else :
+                    second = self.readFromMemory(instruction.secondOperand)
 
-                else:
-                    if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
-                        return 'Error, variable used but not assigned'
+                if first is None or second is None:
+                    return 'Error, variable used but not assigned'
 
-                    self.writeOnMemory(
-                    instruction.result,
-                    self.readFromMemory(instruction.firstOperand)*
-                    self.readFromMemory(instruction.secondOperand)
-                    )
+
+                self.writeOnMemory(
+                instruction.result,
+                first*
+                second
+                )
 
             elif instruction.operator == operators['/']:
-                if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+                if self.isPointer(instruction.secondOperand): #contains array memory
+                    second = self.readFromMemory(self.readFromMemory(instruction.secondOperand.split('&')[1]))
+                else :
+                    second = self.readFromMemory(instruction.secondOperand)
+
+                if first is None or second is None:
                     return 'Error, variable used but not assigned'
 
-                self.writeOnMemory(
-                instruction.result,
-                self.readFromMemory(instruction.firstOperand)/
-                self.readFromMemory(instruction.secondOperand)
-                )
+                self.writeOnMemory(instruction.result, first / second)
 
             elif instruction.operator == operators['==']:
-                if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+                if self.isPointer(instruction.secondOperand): #contains array memory
+                    second = self.readFromMemory(self.readFromMemory(instruction.secondOperand.split('&')[1]))
+                else :
+                    second = self.readFromMemory(instruction.secondOperand)
+
+                if first is None or second is None:
                     return 'Error, variable used but not assigned'
 
-                self.writeOnMemory(
-                instruction.result,
-                self.readFromMemory(instruction.firstOperand) ==
-                self.readFromMemory(instruction.secondOperand)
-                )
+                self.writeOnMemory(instruction.result, first == second)
 
             elif instruction.operator == operators['=']:
                 if self.isPointer(instruction.firstOperand): #contains array memory
@@ -165,44 +180,64 @@ class VirtualMachine:
                 self.writeOnMemory(result, first)
 
             elif instruction.operator == operators['<']:
-                if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+                if self.isPointer(instruction.secondOperand): #contains array memory
+                    second = self.readFromMemory(self.readFromMemory(instruction.secondOperand.split('&')[1]))
+                else :
+                    second = self.readFromMemory(instruction.secondOperand)
+
+                if first is None or second is None:
                     return 'Error, variable used but not assigned'
 
-                self.writeOnMemory(
-                instruction.result,
-                self.readFromMemory(instruction.firstOperand)<
-                self.readFromMemory(instruction.secondOperand)
-                )
+                self.writeOnMemory(instruction.result, first < second)
 
             elif instruction.operator == operators['>']:
-                if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+                if self.isPointer(instruction.secondOperand): #contains array memory
+                    second = self.readFromMemory(self.readFromMemory(instruction.secondOperand.split('&')[1]))
+                else :
+                    second = self.readFromMemory(instruction.secondOperand)
+
+                if first is None or second is None:
                     return 'Error, variable used but not assigned'
 
-                self.writeOnMemory(
-                instruction.result,
-                self.readFromMemory(instruction.firstOperand)>
-                self.readFromMemory(instruction.secondOperand)
-                )
+                self.writeOnMemory(instruction.result, first > second)
 
             elif instruction.operator == operators['&']:
-                if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+                if self.isPointer(instruction.secondOperand): #contains array memory
+                    second = self.readFromMemory(self.readFromMemory(instruction.secondOperand.split('&')[1]))
+                else :
+                    second = self.readFromMemory(instruction.secondOperand)
+
+                if first is None or second is None:
                     return 'Error, variable used but not assigned'
 
-                self.writeOnMemory(
-                instruction.result,
-                self.readFromMemory(instruction.firstOperand) and
-                self.readFromMemory(instruction.secondOperand)
-                )
+                self.writeOnMemory(instruction.result, first and second)
 
             elif instruction.operator == operators['|']:
-                if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+                if self.isPointer(instruction.secondOperand): #contains array memory
+                    second = self.readFromMemory(self.readFromMemory(instruction.secondOperand.split('&')[1]))
+                else :
+                    second = self.readFromMemory(instruction.secondOperand)
+
+                if first is None or second is None:
                     return 'Error, variable used but not assigned'
 
-                self.writeOnMemory(
-                instruction.result,
-                self.readFromMemory(instruction.firstOperand) or
-                self.readFromMemory(instruction.secondOperand)
-                )
+                self.writeOnMemory(instruction.result, first or second)
 
             elif instruction.operator == operators['goto']:
                 self.pc = int(instruction.result) - 1 # -1 because after this code it sums 1 before ending the cycle
@@ -210,24 +245,41 @@ class VirtualMachine:
 
             elif instruction.operator == operators['gotoF']:
 
-                if self.readFromMemory(instruction.firstOperand) is None:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
                     return 'Error, variable used but not assigned'
-                if not self.readFromMemory(instruction.firstOperand):
+
+                if not first:
                     self.pc = int(instruction.result) - 1
 
             elif instruction.operator == operators['gotoT']:
 
-                if self.readFromMemory(instruction.firstOperand) is None:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
                     return 'Error, variable used but not assigned'
-                if self.readFromMemory(instruction.firstOperand):
+
+                if first:
                     self.pc = int(instruction.result) - 1
 
             elif instruction.operator == operators['return']:
 
-                if self.readFromMemory(instruction.firstOperand) is None:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
                     return 'Error, variable used but not assigned'
-                self.writeOnMemory(instruction.result,
-                self.readFromMemory(instruction.firstOperand))
+
+                self.writeOnMemory(instruction.result, first)
                 #retrieve last pointer to jump back where function was called
                 self.pc = int(self.pointerStack.pop())
                 #release memory
@@ -246,16 +298,29 @@ class VirtualMachine:
             elif instruction.operator == operators['param']:
 
                 # we use previous memoty because we are adding info from last memory segment before change context
-                if self.readFromPreviousMemory(instruction.firstOperand) is None:
+
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromPreviousMemory(self.readFromPreviousMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromPreviousMemory(instruction.firstOperand)
+
+                if first is None:
                     return 'Error, variable used but not assigned'
-                self.writeOnMemory(instruction.result,
-                self.readFromPreviousMemory(instruction.firstOperand))
+
+                self.writeOnMemory(instruction.result, first)
 
             elif instruction.operator == operators['verify']:
-                print self.readFromMemory(instruction.firstOperand)
-                if self.readFromMemory(instruction.firstOperand) >= int(instruction.secondOperand) or self.readFromMemory(instruction.firstOperand) < 0:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+
+                if first >= int(instruction.secondOperand) or first < 0:
                     return 'Error, index out of bounds'
 
             self.pc += 1
 
-        return 'Process finished successful'
+        return 'Process completed successfully'

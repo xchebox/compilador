@@ -211,10 +211,16 @@ def generateOperatorNextQuadruple(operator):
 
 
 #generates an assignation quadruple. Var is the variable that is going to be assigned
-def generateAsignationNextQuadruple(varMemory, varType, id):
+def generateAsignationNextQuadruple(var, varType, id):
     resultType = semantic_cube[typesStack.pop()][operators['=']][varType]
     if  resultType != -1 : #can do operator
-        quadrupleManager.addQuadruple(operators['='], operandsStack.pop(), ' ', varMemory)
+        value = operandsStack.pop()
+        s = var.getTotalMemoryDimension() # it is an array
+        i = 0
+        while i < s:
+            varMemory = var.getMemory() + i #all cells in array are setted to initial value
+            quadrupleManager.addQuadruple(operators['='],value , ' ', varMemory)
+            i += 1
         return 1
     else :
         return 0
@@ -311,7 +317,7 @@ def generateAddBaseMemoryQuadruple(baseMemory):
 def generateAsignationArrayQuadruple(varMemory, varType, id):
     resultType = semantic_cube[typesStack.pop()][operators['=']][varType]
     if  resultType != -1 : #can do operator
-        quadrupleManager.addQuadruple(operators['='], varMemory, ' ', "&%s"%operandsStack.pop())
+        quadrupleManager.addQuadruple(operators['='], varMemory, ' ', operandsStack.pop())
         return 1
     else :
         return 0
@@ -651,11 +657,11 @@ def p_int_assignation(p):
                             | empty'''
     if p[1] == '=':
         if onGlobalScope():
-            if generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global').getMemory(), TYPES['int'], getLastVariable()) == 0:
+            if generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global'), TYPES['int'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
             #TODO change into memory using globla or local scope
         else :
-            if generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction().getMemory(), TYPES['int'], getLastVariable()) == 0:
+            if generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction(), TYPES['int'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
 
 #assignation of a double variable
@@ -664,11 +670,11 @@ def p_double_assignation(p):
                             | empty'''
     if p[1] == '=':
         if onGlobalScope():
-            if generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global').getMemory(), TYPES['double'], getLastVariable()) == 0:
+            if generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global'), TYPES['double'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
             #TODO change into memory using globla or local scope
         else :
-            if generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction().getMemory(), TYPES['double'], getLastVariable()) == 0:
+            if generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction(), TYPES['double'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
 
 
@@ -678,10 +684,10 @@ def p_boolean_assignation(p):
                             | empty'''
     if p[1] == '=':
         if onGlobalScope():
-            generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global').getMemory(), TYPES['boolean'], getLastVariable())
+            generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global'), TYPES['boolean'], getLastVariable())
             #TODO change into memory using globla or local scope
         else :
-            generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction().getMemory(), TYPES['boolean'], getLastVariable())
+            generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction(), TYPES['boolean'], getLastVariable())
 
 #unknown variable assignation
 def p_assignation_statute(p):
@@ -693,10 +699,10 @@ def p_assignation_statute(p):
             # add info into from global scope
             var = getVariableFromFunction(p[1],'global')
             if len(var.dimension) > 0: #var is an array
-                if generateAsignationNextQuadruple(operandsStack.pop(), var.getType(), p[1]) == 0:
+                if generateAsignationArrayQuadruple(operandsStack.pop(), var.getType(), p[1]) == 0:
                     error('Type mismatch on line', p.lineno(1))
             else :
-                if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
+                if generateAsignationNextQuadruple(var, var.getType(), p[1]) == 0:
                     error('Type mismatch on line', p.lineno(1))
     else :
         if not varExistsOnFunction(p[1], getLastFunction()):
@@ -705,22 +711,22 @@ def p_assignation_statute(p):
             else :
                 var = getVariableFromFunction(p[1],'global')
                 if len(var.dimension) > 0: #var is an array
-                    if generateAsignationNextQuadruple(operandsStack.pop(), var.getType(), p[1]) == 0:
+                    if generateAsignationArrayQuadruple(operandsStack.pop(), var.getType(), p[1]) == 0:
                         error('Type mismatch on line', p.lineno(1))
                 else :
                     var = getVariableFromFunction(p[1],'global')
                     # add info into from global scope
-                    if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
+                    if generateAsignationNextQuadruple(var, var.getType(), p[1]) == 0:
                         error('Type mismatch on line', p.lineno(1))
         else :
             # add into info from local scope
             var = getVariableFromFunction(p[1],getLastFunction())
             if len(var.dimension) > 0: #var is an array
-                if generateAsignationNextQuadruple(operandsStack.pop(), var.getType(), p[1]) == 0:
+                if generateAsignationArrayQuadruple(operandsStack.pop(), var.getType(), p[1]) == 0:
                     error('Type mismatch on line ', p.lineno(1))
             else :
                 var = getVariableFromFunction(p[1],getLastFunction())
-                if generateAsignationNextQuadruple(var.getMemory(), var.getType(), p[1]) == 0:
+                if generateAsignationNextQuadruple(var, var.getType(), p[1]) == 0:
                     error('Type mismatch on line ', p.lineno(1))
 
 
@@ -1161,14 +1167,14 @@ parser.defaulted_states = {};
 
 #file = open("parse_test_cycles.txt", "r")
 #file = open("parser_test_function.txt", "r")
-file = open("parser_test_array.txt", "r")
-#file = open("parser_test.txt", "r")
+#file = open("parser_test_array.txt", "r")
+file = open("parser_test.txt", "r")
 parser.parse( file.read() )
 
 
 if status :
     #printSummary()
-    printQuadruples()
+    #printQuadruples()
     #printMemorySegmentMap()
 
     writeQuadruples()

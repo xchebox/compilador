@@ -10,19 +10,30 @@ class VirtualMachine:
         self.instructions = {}
         #program counter. To know current Quadruple
         self.pc = 0
+        self.pointerStack = []
         self.memoryMap = {}
         self.mStack = [] #memory stack
+        print gMemory.globalM.integerStack
 
 
     def readFromMemory(self, memory):
+        #print memory
         memory = int(memory)
         if memory >= 5000 and memory < 9000: #global memory
             return gMemory.readFromMemory(memory)
         elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
-            print gMemory.readFromMemory(memory)
             return gMemory.readFromMemory(memory)
         else :
             return self.mStack[len(self.mStack) - 1].readFromMemory(memory)
+
+    def readFromPreviousMemory(self, memory):
+        memory = int(memory)
+        if memory >= 5000 and memory < 9000: #global memory
+            return gMemory.readFromMemory(memory)
+        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+            return gMemory.readFromMemory(memory)
+        else :
+            return self.mStack[len(self.mStack) - 2].readFromMemory(memory)
 
     def writeOnMemory(self, memory, value):
         memory = int(memory)
@@ -61,6 +72,7 @@ class VirtualMachine:
         self.loadMemory('main')#loads main memory segment
 
         while  self.instructions[self.pc].operator != operators['end']:
+            print operators.keys()[operators.values().index(self.instructions[self.pc].operator)]
             instruction = self.instructions[self.pc]
             if instruction.operator == operators['+']:
                 if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
@@ -71,7 +83,6 @@ class VirtualMachine:
                 self.readFromMemory(instruction.firstOperand)+
                 self.readFromMemory(instruction.secondOperand)
                 )
-                print self.readFromMemory(instruction.result)
 
             elif instruction.operator == operators['-']:
                 if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
@@ -82,7 +93,6 @@ class VirtualMachine:
                 self.readFromMemory(instruction.firstOperand)-
                 self.readFromMemory(instruction.secondOperand)
                 )
-                print self.readFromMemory(instruction.result)
 
             elif instruction.operator == operators['*']:
                 if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
@@ -93,7 +103,6 @@ class VirtualMachine:
                 self.readFromMemory(instruction.firstOperand)*
                 self.readFromMemory(instruction.secondOperand)
                 )
-                print self.readFromMemory(instruction.result)
 
             elif instruction.operator == operators['/']:
                 if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
@@ -104,7 +113,6 @@ class VirtualMachine:
                 self.readFromMemory(instruction.firstOperand)/
                 self.readFromMemory(instruction.secondOperand)
                 )
-                print self.readFromMemory(instruction.result)
 
             elif instruction.operator == operators['==']:
                 if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
@@ -115,10 +123,8 @@ class VirtualMachine:
                 self.readFromMemory(instruction.firstOperand) ==
                 self.readFromMemory(instruction.secondOperand)
                 )
-                print self.readFromMemory(instruction.result)
 
             elif instruction.operator == operators['=']:
-                print instruction.firstOperand
                 if self.readFromMemory(instruction.firstOperand) is None:
                     return 'Error, variable used but not assigned'
                 self.writeOnMemory(instruction.result,
@@ -133,7 +139,6 @@ class VirtualMachine:
                 self.readFromMemory(instruction.firstOperand)<
                 self.readFromMemory(instruction.secondOperand)
                 )
-                print self.readFromMemory(instruction.result)
 
             elif instruction.operator == operators['>']:
                 if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
@@ -144,7 +149,6 @@ class VirtualMachine:
                 self.readFromMemory(instruction.firstOperand)>
                 self.readFromMemory(instruction.secondOperand)
                 )
-                print self.readFromMemory(instruction.result)
 
             elif instruction.operator == operators['&']:
                 if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
@@ -155,7 +159,6 @@ class VirtualMachine:
                 self.readFromMemory(instruction.firstOperand) and
                 self.readFromMemory(instruction.secondOperand)
                 )
-                print self.readFromMemory(instruction.result)
 
             elif instruction.operator == operators['|']:
                 if self.readFromMemory(instruction.firstOperand) is None or self.readFromMemory(instruction.secondOperand) is None:
@@ -168,7 +171,7 @@ class VirtualMachine:
                 )
 
             elif instruction.operator == operators['goto']:
-                self.pc = int(instruction.result) #TODO remember why- 1
+                self.pc = int(instruction.result) - 1 # -1 because after this code it sums 1 before ending the cycle
 
 
             elif instruction.operator == operators['gotoF']:
@@ -176,23 +179,44 @@ class VirtualMachine:
                 if self.readFromMemory(instruction.firstOperand) is None:
                     return 'Error, variable used but not assigned'
                 if not self.readFromMemory(instruction.firstOperand):
-                    self.pc = int(instruction.result)
+                    self.pc = int(instruction.result) - 1
 
             elif instruction.operator == operators['gotoT']:
 
                 if self.readFromMemory(instruction.firstOperand) is None:
                     return 'Error, variable used but not assigned'
                 if self.readFromMemory(instruction.firstOperand):
-                    self.pc = int(instruction.result)
+                    self.pc = int(instruction.result) - 1
 
             elif instruction.operator == operators['return']:
-                print 'return'
+
+                if self.readFromMemory(instruction.firstOperand) is None:
+                    return 'Error, variable used but not assigned'
+                self.writeOnMemory(instruction.result,
+                self.readFromMemory(instruction.firstOperand))
+                #retrieve last pointer to jump back where function was called
+                self.pc = int(self.pointerStack.pop())
+                #release memory
+                self.mStack.pop()
+
             elif instruction.operator == operators['era']:
-                print 'era'
+
+                #loads new memory to stack
+                self.loadMemory(instruction.firstOperand)
+
             elif instruction.operator == operators['goSub']:
-                print 'goSub'
+                #adds pointer to stack to know how to jump back after return
+                self.pointerStack.append(self.pc)
+                self.pc = int(instruction.result) - 1
+
             elif instruction.operator == operators['param']:
-                print 'param'
+
+                # we use previous memoty because we are adding info from last memory segment before change context
+                if self.readFromPreviousMemory(instruction.firstOperand) is None:
+                    return 'Error, variable used but not assigned'
+                self.writeOnMemory(instruction.result,
+                self.readFromPreviousMemory(instruction.firstOperand))
+
             self.pc += 1
 
         return 'Process finished successful'

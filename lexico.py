@@ -32,6 +32,8 @@ reserved = {
     'rectangle'         : 'RECTANGLE',
     'triangle'          : 'TRIANGLE',
     'circle'            : 'CIRCLE',
+    'moveForward'       : 'MOVEFORWARD',
+    'print'             : 'PRINT',
 }
 
 tokens = [

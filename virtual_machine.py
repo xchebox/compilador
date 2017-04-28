@@ -58,6 +58,7 @@ class VirtualMachine:
         screen = turtle.Screen()
         screen.title('Code To Paint')
         screen.colormode(255)
+        screen.delay(100)
         screen_x, screen_y = screen.screensize()
 
     def loadProgram(self):
@@ -407,11 +408,15 @@ class VirtualMachine:
                 if first is None:
                     return 'Error, variable used but not assigned'
 
+                # we save last heading to restore it after draw
+                lastHeading = self.turtle.heading()
                 if first < 0:
                     self.turtle.setheading(180)
                 else :
                     self.turtle.setheading(0)
                 self.turtle.forward(first)
+
+                self.turtle.setheading(lastHeading) # restores the initial heading
 
             elif instruction.operator == operators['moveY']:
                 if self.isPointer(instruction.firstOperand): #contains array memory
@@ -422,10 +427,26 @@ class VirtualMachine:
                 if first is None:
                     return 'Error, variable used but not assigned'
 
+                # we save last heading to restore it after draw
+                lastHeading = self.turtle.heading()
+
                 if first < 0:
                     self.turtle.setheading(270)
                 else :
                     self.turtle.setheading(90)
+                self.turtle.forward(first)
+
+                self.turtle.setheading(lastHeading) # restores the initial heading
+
+            elif instruction.operator == operators['moveForward']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+
                 self.turtle.forward(first)
 
             elif instruction.operator == operators['rotateLeft']:
@@ -449,6 +470,17 @@ class VirtualMachine:
                     return 'Error, variable used but not assigned'
 
                 self.turtle.right(first)
+
+            elif instruction.operator == operators['circle']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+
+                self.turtle.circle(first) # restores the initial heading
 
             self.pc += 1
 

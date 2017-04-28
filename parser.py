@@ -8,6 +8,7 @@ from stacks import *
 from memory import memoryManager
 from quadruple import QuadrupleManager
 from virtual_machine import VirtualMachine
+import math
 
 status = True #used to run virtual machine when is not error flag
 
@@ -372,6 +373,12 @@ def generateMoveYQuadruple():
     quadrupleManager.addQuadruple(operators['moveY'],operandsStack.pop(),' ',' ')
     return 0
 
+def generateMoveForwardQuadruple():
+    if typesStack.pop() != TYPES['int']:
+        return -1
+    quadrupleManager.addQuadruple(operators['moveForward'],operandsStack.pop(),' ',' ')
+    return 0
+
 def generateRotateToRightQuadruple():
     if typesStack.pop() != TYPES['int']:
         return -1
@@ -387,19 +394,70 @@ def generateRotateToLeftQuadruple():
 def generateRectangleQuadruple():#TODO implements these three down
     if typesStack.pop() != TYPES['int'] or typesStack.pop() != TYPES['int']:
         return -1
-    quadrupleManager.addQuadruple(operators['penDown'],' ',' ',' ')
+
+    height = operandsStack.pop()
+    width = operandsStack.pop()
+
+    temp = memoryManager.consM.requestIntMemory(1)
+    memoryManager.consM.writeOnMemory(temp, 90, TYPES['int']) #TODO remove this to manage constants
+    functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
+
+    quadrupleManager.addQuadruple(operators['moveForward'], width,' ',' ')
+
+    operandsStack.append(temp)
+    typesStack.append(TYPES['int'])
+    generateRotateToLeftQuadruple()
+    quadrupleManager.addQuadruple(operators['moveForward'], height,' ',' ')
+
+    operandsStack.append(temp)
+    typesStack.append(TYPES['int'])
+    generateRotateToLeftQuadruple()
+    quadrupleManager.addQuadruple(operators['moveForward'], width,' ',' ')
+
+    operandsStack.append(temp)
+    typesStack.append(TYPES['int'])
+    generateRotateToLeftQuadruple()
+    quadrupleManager.addQuadruple(operators['moveForward'], height,' ',' ')
+
+
+    operandsStack.append(temp)
+    typesStack.append(TYPES['int'])
+    generateRotateToLeftQuadruple()
+
     return 0
 
 def generateTriangleQuadruple():
-    if typesStack.pop() != TYPES['int'] or typesStack.pop() != TYPES['int']:
+    if typesStack.pop() != TYPES['int']:
         return -1
-    quadrupleManager.addQuadruple(operators['penDown'],' ',' ',' ')
+
+    size = operandsStack.pop()
+
+    temp = memoryManager.consM.requestIntMemory(1)
+    memoryManager.consM.writeOnMemory(temp, 120, TYPES['int']) #TODO remove this to manage constants
+    functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
+
+    quadrupleManager.addQuadruple(operators['moveForward'], size,' ',' ')
+
+    operandsStack.append(temp)
+    typesStack.append(TYPES['int'])
+    generateRotateToLeftQuadruple()
+    quadrupleManager.addQuadruple(operators['moveForward'], size,' ',' ')
+
+    operandsStack.append(temp)
+    typesStack.append(TYPES['int'])
+    generateRotateToLeftQuadruple()
+    quadrupleManager.addQuadruple(operators['moveForward'], size,' ',' ')
+
+    operandsStack.append(temp)
+    typesStack.append(TYPES['int'])
+    generateRotateToLeftQuadruple()
+
     return 0
 
 def generateCircleQuadruple():
     if typesStack.pop() != TYPES['int']:
         return -1
-    quadrupleManager.addQuadruple(operators['penDown'],operandsStack.pop(),' ',' ')
+    quadrupleManager.addQuadruple(operators['circle'],operandsStack.pop(),' ',' ')
     return 0
 
 # Get the token map from the lexer.  This is required.
@@ -1169,6 +1227,7 @@ def p_graphic_statute(p):
                             | clear_statute
                             | move_on_x_statute
                             | move_on_y_statute
+                            | move_forward_statute
                             | rotate_to_right_statute
                             | rotate_to_left_statute
                             | rectangle_statute
@@ -1217,6 +1276,11 @@ def p_move_on_y_statute(p):
     if generateMoveYQuadruple() == -1:
         error('type mismatch, setY uses 1 integer, on line ', p.lineno(0))
 
+def p_move_forward_statute(p):
+    '''move_forward_statute : MOVEFORWARD LPAREN expression RPAREN SEMICOLON '''
+    if generateMoveForwardQuadruple() == -1:
+        error('type mismatch, setY uses 1 integer, on line ', p.lineno(0))
+
 def p_rotate_to_right_statute(p):
     '''rotate_to_right_statute : ROTATETORIGHT LPAREN expression RPAREN SEMICOLON '''
     if generateRotateToRightQuadruple() == -1:
@@ -1233,11 +1297,11 @@ def p_rectangle_statute(p):
     if generateRectangleQuadruple() == -1:
         error('type mismatch, rectangle uses 2 integers, on line ', p.lineno(0))
 
-#triangle(base, height)
+#triangle(base)
 def p_triangle_statute(p):
-    '''triangle_statute : TRIANGLE LPAREN expression COMMA expression RPAREN SEMICOLON '''
+    '''triangle_statute : TRIANGLE LPAREN expression RPAREN SEMICOLON '''
     if generateTriangleQuadruple() == -1:
-        error('type mismatch, triangle uses 2 integers, on line ', p.lineno(0))
+        error('type mismatch, triangle uses 1 integer, on line ', p.lineno(0))
 
 #circle(diameter)
 def p_circle_statute(p):

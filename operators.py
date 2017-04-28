@@ -28,6 +28,8 @@ operators = {
     'rotateLeft'    : 26,
     'moveX'         : 27,
     'moveY'         : 28,
-    'clear'         : 29
+    'clear'         : 29,
+    'moveForward'   : 30,
+    'circle'        : 31
 
 }

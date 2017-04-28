@@ -325,6 +325,10 @@ def generateAsignationArrayQuadruple(varMemory, varType, id):
 
     return -1
 
+def generatePrintQuadruple():
+    typesStack.pop() # does not actually checks type
+    quadrupleManager.addQuadruple(operators['print'], operandsStack.pop(), ' ',' ')
+
 def generatePenUpQuadruple():
     quadrupleManager.addQuadruple(operators['penUp'],' ',' ',' ')
 
@@ -1115,6 +1119,7 @@ def p_statute(p):
                     | declaration_statute statute
                     | function_statute statute
                     | comment_statute statute
+                    | print_statute statute
                     | graphic_statute statute
                     | empty'''
 
@@ -1214,6 +1219,10 @@ def p_function_statute(p):
 #comment statute
 def p_comment_statute(p):
     '''comment_statute :    COMMENT statute'''
+
+def p_print_statute(p):
+    '''print_statute : PRINT LPAREN expression RPAREN SEMICOLON  '''
+    generatePrintQuadruple()
 
 
 #turtle graphics statutes
@@ -1343,7 +1352,7 @@ parser.parse( file.read() )
 
 if status :
     #printSummary()
-    printQuadruples()
+    #printQuadruples()
     #printMemorySegmentMap()
 
     writeQuadruples()

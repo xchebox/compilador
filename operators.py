@@ -30,6 +30,7 @@ operators = {
     'moveY'         : 28,
     'clear'         : 29,
     'moveForward'   : 30,
-    'circle'        : 31
+    'circle'        : 31,
+    'print'         : 32
 
 }

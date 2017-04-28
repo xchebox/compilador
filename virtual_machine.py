@@ -336,6 +336,17 @@ class VirtualMachine:
                 if first >= int(instruction.secondOperand) or first < 0:
                     return 'Error, index out of bounds'
 
+            elif instruction.operator == operators['print']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+
+                print(first)
+
             elif instruction.operator == operators['penUp']:
                 self.turtle.penup()
 

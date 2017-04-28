@@ -324,6 +324,83 @@ def generateAsignationArrayQuadruple(varMemory, varType, id):
 
     return -1
 
+def generatePenUpQuadruple():
+    quadrupleManager.addQuadruple(operators['penUp'],' ',' ',' ')
+
+def generatePenDownQuadruple():
+    quadrupleManager.addQuadruple(operators['penDown'],' ',' ',' ')
+
+def generatePenSizeQuadruple():
+    if typesStack.pop() != TYPES['int']:
+        return -1
+    quadrupleManager.addQuadruple(operators['penSize'],operandsStack.pop(),' ',' ')
+    return 0
+
+def generatePenColorQuadruple():
+    if typesStack.pop() != TYPES['int'] or typesStack.pop() != TYPES['int'] or typesStack.pop() != TYPES['int']:
+        return -1
+    b = operandsStack.pop()
+    g = operandsStack.pop()
+    r = operandsStack.pop()
+    quadrupleManager.addQuadruple(operators['penColor'],r ,g ,b)
+    return 0
+
+def generateSetXQuadruple():
+    if typesStack.pop() != TYPES['int']:
+        return -1
+    quadrupleManager.addQuadruple(operators['setX'],operandsStack.pop(),' ',' ')
+    return 0
+
+def generateSetYQuadruple():
+    if typesStack.pop() != TYPES['int']:
+        return -1
+    quadrupleManager.addQuadruple(operators['setY'],operandsStack.pop(),' ',' ')
+    return 0
+
+def generateClearQuadruple():
+    quadrupleManager.addQuadruple(operators['clear'],' ',' ',' ')
+
+def generateMoveXQuadruple():
+    if typesStack.pop() != TYPES['int']:
+        return -1
+    quadrupleManager.addQuadruple(operators['moveX'],operandsStack.pop(),' ',' ')
+    return 0
+
+def generateMoveYQuadruple():
+    if typesStack.pop() != TYPES['int']:
+        return -1
+    quadrupleManager.addQuadruple(operators['moveY'],operandsStack.pop(),' ',' ')
+    return 0
+
+def generateRotateToRightQuadruple():
+    if typesStack.pop() != TYPES['int']:
+        return -1
+    quadrupleManager.addQuadruple(operators['rotateRight'],operandsStack.pop(),' ',' ')
+    return 0
+
+def generateRotateToLeftQuadruple():
+    if typesStack.pop() != TYPES['int']:
+        return -1
+    quadrupleManager.addQuadruple(operators['rotateLeft'],operandsStack.pop(),' ',' ')
+    return 0
+
+def generateRectangleQuadruple():#TODO implements these three down
+    if typesStack.pop() != TYPES['int'] or typesStack.pop() != TYPES['int']:
+        return -1
+    quadrupleManager.addQuadruple(operators['penDown'],' ',' ',' ')
+    return 0
+
+def generateTriangleQuadruple():
+    if typesStack.pop() != TYPES['int'] or typesStack.pop() != TYPES['int']:
+        return -1
+    quadrupleManager.addQuadruple(operators['penDown'],' ',' ',' ')
+    return 0
+
+def generateCircleQuadruple():
+    if typesStack.pop() != TYPES['int']:
+        return -1
+    quadrupleManager.addQuadruple(operators['penDown'],operandsStack.pop(),' ',' ')
+    return 0
 
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
@@ -1100,46 +1177,73 @@ def p_graphic_statute(p):
 
 def p_pen_up_statute(p):
     '''pen_up_statute :    PENUP LPAREN RPAREN SEMICOLON'''
+    generatePenUpQuadruple()
 
 def p_pen_down_statute(p):
     '''pen_down_statute :  PENDOWN LPAREN RPAREN SEMICOLON  '''
+    generatePenDownQuadruple()
 
 def p_pen_size_statute(p):
     '''pen_size_statute :  PENSIZE LPAREN expression RPAREN SEMICOLON  '''
+    if generatePenSizeQuadruple() == -1:
+        error('type mismatch, Pen Size uses an integer, on line ', p.lineno(0))
 
 def p_pen_color_statute(p):
     '''pen_color_statute :  PENCOLOR LPAREN expression COMMA expression COMMA expression RPAREN SEMICOLON  '''
+    if generatePenColorQuadruple() == -1:
+        error('type mismatch, PenColor uses 3 integers between 0 and 255, on line ', p.lineno(0))
 
 def p_set_x_statute(p):
     '''set_x_statute :    SETX LPAREN expression RPAREN SEMICOLON'''
+    if generateSetXQuadruple() == -1:
+        error('type mismatch, setX uses 1 integer, on line ', p.lineno(0))
 
 def p_set_y_statute(p):
     '''set_y_statute :    SETY LPAREN expression RPAREN SEMICOLON'''
+    if generateSetYQuadruple() == -1:
+        error('type mismatch, setY uses 1 integer, on line ', p.lineno(0))
 
 def p_clear_statute(p):
     '''clear_statute :    CLEAR LPAREN RPAREN SEMICOLON '''
+    generateClearQuadruple()
 
 def p_move_on_x_statute(p):
     '''move_on_x_statute : MOVEONX LPAREN expression RPAREN SEMICOLON  '''
+    if generateMoveXQuadruple() == -1:
+        error('type mismatch, moveOnX uses 1 integer, on line ', p.lineno(0))
 
 def p_move_on_y_statute(p):
     '''move_on_y_statute : MOVEONY LPAREN expression RPAREN SEMICOLON '''
+    if generateMoveYQuadruple() == -1:
+        error('type mismatch, setY uses 1 integer, on line ', p.lineno(0))
 
 def p_rotate_to_right_statute(p):
     '''rotate_to_right_statute : ROTATETORIGHT LPAREN expression RPAREN SEMICOLON '''
+    if generateRotateToRightQuadruple() == -1:
+        error('type mismatch, rotateToRight uses 1 integer, on line ', p.lineno(0))
 
 def p_rotate_to_left_statute(p):
     '''rotate_to_left_statute : ROTATETOLEFT LPAREN expression RPAREN SEMICOLON '''
+    if generateRotateToLeftQuadruple() == -1:
+        error('type mismatch, rotateToLeft uses 1 integer, on line ', p.lineno(0))
 
 #rectangle(width, height)
 def p_rectangle_statute(p):
     '''rectangle_statute : RECTANGLE LPAREN expression COMMA expression RPAREN SEMICOLON '''
+    if generateRectangleQuadruple() == -1:
+        error('type mismatch, rectangle uses 2 integers, on line ', p.lineno(0))
+
 #triangle(base, height)
 def p_triangle_statute(p):
     '''triangle_statute : TRIANGLE LPAREN expression COMMA expression RPAREN SEMICOLON '''
+    if generateTriangleQuadruple() == -1:
+        error('type mismatch, triangle uses 2 integers, on line ', p.lineno(0))
+
 #circle(diameter)
 def p_circle_statute(p):
     '''circle_statute : CIRCLE LPAREN expression RPAREN SEMICOLON '''
+    if generateCircleQuadruple() == -1:
+        error('type mismatch, circle uses 1 integer, on line ', p.lineno(0))
 
 #error flag
 def error(message, line = None):
@@ -1168,13 +1272,14 @@ parser.defaulted_states = {};
 #file = open("parse_test_cycles.txt", "r")
 #file = open("parser_test_function.txt", "r")
 #file = open("parser_test_array.txt", "r")
-file = open("parser_test.txt", "r")
+#file = open("parser_test.txt", "r")
+file = open("parser_test_graphic.txt", "r")
 parser.parse( file.read() )
 
 
 if status :
     #printSummary()
-    #printQuadruples()
+    printQuadruples()
     #printMemorySegmentMap()
 
     writeQuadruples()

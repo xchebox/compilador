@@ -2,6 +2,7 @@
 from quadruple import Quadruple
 from operators import operators
 from memory import memoryManager as gMemory, MemoryManager
+import turtle
 
 class VirtualMachine:
 
@@ -13,6 +14,7 @@ class VirtualMachine:
         self.pointerStack = []
         self.memoryMap = {}
         self.mStack = [] #memory stack
+        self.turtle = turtle.Turtle()
 
 
     def readFromMemory(self, memory):
@@ -52,6 +54,12 @@ class VirtualMachine:
     def isDirect(self,operand):
         return operand[0] == '*'
 
+    def initScreen(self):
+        screen = turtle.Screen()
+        screen.title('Code To Paint')
+        screen.colormode(255)
+        screen_x, screen_y = screen.screensize()
+
     def loadProgram(self):
         file = open("./out/quadruple.cp", "r")
 
@@ -74,6 +82,9 @@ class VirtualMachine:
             ic += 1
 
     def run(self):
+
+        self.initScreen()
+
         self.loadMemory('main')#loads main memory segment
 
         while  self.instructions[self.pc].operator != operators['end']:
@@ -147,6 +158,9 @@ class VirtualMachine:
 
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
+
+                if second == 0:
+                    return 'Error, division by zero'
 
                 self.writeOnMemory(instruction.result, first / second)
 
@@ -320,6 +334,121 @@ class VirtualMachine:
 
                 if first >= int(instruction.secondOperand) or first < 0:
                     return 'Error, index out of bounds'
+
+            elif instruction.operator == operators['penUp']:
+                self.turtle.penup()
+
+            elif instruction.operator == operators['penDown']:
+                self.turtle.pendown()
+
+            elif instruction.operator == operators['penSize']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+
+                self.turtle.pensize(first)
+
+            elif instruction.operator == operators['penColor']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+                if self.isPointer(instruction.secondOperand): #contains array memory
+                    second = self.readFromMemory(self.readFromMemory(instruction.secondOperand.split('&')[1]))
+                else :
+                    second = self.readFromMemory(instruction.secondOperand)
+
+                if self.isPointer(instruction.result): #contains array memory
+                    third = self.readFromMemory(instruction.result.split('&')[1])
+                else :
+                    third = self.readFromMemory(instruction.result)
+
+                if first is None or second is None or third is None:
+                    return 'Error, variable used but not assigned'
+
+                self.turtle.pencolor((first, second, third))
+
+            elif instruction.operator == operators['setX']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+
+                self.turtle.setx(first)
+
+            elif instruction.operator == operators['setY']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+
+                self.turtle.sety(first)
+
+            elif instruction.operator == operators['clear']:
+
+                self.turtle.clear()
+
+            elif instruction.operator == operators['moveX']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+
+                if first < 0:
+                    self.turtle.setheading(180)
+                else :
+                    self.turtle.setheading(0)
+                self.turtle.forward(first)
+
+            elif instruction.operator == operators['moveY']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+
+                if first < 0:
+                    self.turtle.setheading(270)
+                else :
+                    self.turtle.setheading(90)
+                self.turtle.forward(first)
+
+            elif instruction.operator == operators['rotateLeft']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+
+                self.turtle.left(first)
+
+            elif instruction.operator == operators['rotateRight']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+
+                self.turtle.right(first)
 
             self.pc += 1
 

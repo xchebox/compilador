@@ -16,6 +16,7 @@ class VirtualMachine:
         self.memoryMap = {}
         self.mStack = [] #memory stack
         self.turtle = turtle.Turtle()
+        self.screen = turtle.Screen()
 
 
     def readFromMemory(self, memory):
@@ -68,11 +69,10 @@ class VirtualMachine:
         return operand[0] == '*'
 
     def initScreen(self):
-        screen = turtle.Screen()
-        screen.title('Code To Paint')
-        screen.colormode(255)
-        screen.delay(10)
-        screen_x, screen_y = screen.screensize()
+        self.screen.title('Code To Paint')
+        self.screen.colormode(255)
+        self.screen.delay(10)
+        screen_x, screen_y = self.screen.screensize()
 
     def loadProgram(self):
         file = open("./out/quadruple.cp", "r")
@@ -530,5 +530,7 @@ class VirtualMachine:
                 self.mStack.pop()
 
             self.pc += 1
+
+        self.turtle.getscreen().getcanvas().postscript(file="drawing.eps")
 
         return 'Process completed successfully'

@@ -1376,9 +1376,9 @@ parser.defaulted_states = {};
 #file = open("parser_test_array.txt", "r")
 #file = open("parser_test.txt", "r")
 #file = open("parser_test_graphic.txt", "r")
-#file = open("first_draw.txt", "r")
+file = open("parser_first_draw.txt", "r")
 #file = open("recursion_test.txt", "r")
-file = open("parser_sort_test.txt", "r")
+#file = open("parser_sort_test.txt", "r")
 #file = open("parser_function_test.txt", "r")
 parser.parse( file.read() )
 

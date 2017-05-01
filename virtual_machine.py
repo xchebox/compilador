@@ -11,6 +11,7 @@ class VirtualMachine:
         self.instructions = {}
         #program counter. To know current Quadruple
         self.pc = 0
+        self.tempMemory = MemoryManager()
         self.pointerStack = []
         self.memoryMap = {}
         self.mStack = [] #memory stack
@@ -27,15 +28,6 @@ class VirtualMachine:
         else :
             return self.mStack[len(self.mStack) - 1].readFromMemory(memory)
 
-    def readFromPreviousMemory(self, memory):
-        memory = int(memory)
-        if memory >= 5000 and memory < 9000: #global memory
-            return gMemory.readFromMemory(memory)
-        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
-            return gMemory.readFromMemory(memory)
-        else :
-            return self.mStack[len(self.mStack) - 2].readFromMemory(memory)
-
     def writeOnMemory(self, memory, value):
         memory = int(memory)
         if memory >= 5000 and memory < 9000: #global memory
@@ -45,8 +37,20 @@ class VirtualMachine:
         else:
             self.mStack[len(self.mStack) - 1].writeOnMemory(memory, value)
 
-    def loadMemory(self, functionName):
-        self.mStack.append(MemoryManager())
+    def writeOnNewMemory(self, memory, value):
+        memory = int(memory)
+        if memory >= 5000 and memory < 9000: #global memory
+            gMemory.writeOnMemory(memory, value)
+        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+            gMemory.writeOnMemory(memory, value)
+        else:
+            self.tempMemory.writeOnMemory(memory, value)
+
+    def requestMemory(self, functionName):
+        self.tempMemory = MemoryManager()
+
+    def loadMemory(self):
+        self.mStack.append(self.tempMemory)
 
     def isPointer(self,operand):
         return operand[0] == '&'
@@ -58,7 +62,7 @@ class VirtualMachine:
         screen = turtle.Screen()
         screen.title('Code To Paint')
         screen.colormode(255)
-        screen.delay(100)
+        screen.delay(10)
         screen_x, screen_y = screen.screensize()
 
     def loadProgram(self):
@@ -86,7 +90,8 @@ class VirtualMachine:
 
         self.initScreen()
 
-        self.loadMemory('main')#loads main memory segment
+        self.requestMemory('main')
+        self.loadMemory()#loads main memory segment
 
         while  self.instructions[self.pc].operator != operators['end']:
             instruction = self.instructions[self.pc]
@@ -106,7 +111,6 @@ class VirtualMachine:
                     second = self.readFromMemory(instruction.secondOperand)
 
                 if first is None or second is None:
-                    print "f %s s %s"%(first, second)
                     return 'Error, variable used but not assigned'
                 self.writeOnMemory(instruction.result,first + second)
 
@@ -303,7 +307,11 @@ class VirtualMachine:
             elif instruction.operator == operators['era']:
 
                 #loads new memory to stack
-                self.loadMemory(instruction.firstOperand)
+                self.requestMemory(instruction.firstOperand)
+
+            elif instruction.operator == operators['loadMemory']:
+                #loads new Memory into stack
+                self.loadMemory()
 
             elif instruction.operator == operators['goSub']:
                 #adds pointer to stack to know how to jump back after return
@@ -315,14 +323,14 @@ class VirtualMachine:
                 # we use previous memoty because we are adding info from last memory segment before change context
 
                 if self.isPointer(instruction.firstOperand): #contains array memory
-                    first = self.readFromPreviousMemory(self.readFromPreviousMemory(instruction.firstOperand.split('&')[1]))
+                    first = self.readFromMemory(self.readFromPreviousMemory(instruction.firstOperand.split('&')[1]))
                 else :
-                    first = self.readFromPreviousMemory(instruction.firstOperand)
+                    first = self.readFromMemory(instruction.firstOperand)
 
                 if first is None:
                     return 'Error, variable used but not assigned'
 
-                self.writeOnMemory(instruction.result, first)
+                self.writeOnNewMemory(instruction.result, first)
 
             elif instruction.operator == operators['verify']:
                 if self.isPointer(instruction.firstOperand): #contains array memory
@@ -423,9 +431,10 @@ class VirtualMachine:
                 lastHeading = self.turtle.heading()
                 if first < 0:
                     self.turtle.setheading(180)
+                    self.turtle.forward(-first)
                 else :
                     self.turtle.setheading(0)
-                self.turtle.forward(first)
+                    self.turtle.forward(first)
 
                 self.turtle.setheading(lastHeading) # restores the initial heading
 
@@ -443,9 +452,11 @@ class VirtualMachine:
 
                 if first < 0:
                     self.turtle.setheading(270)
+                    self.turtle.forward(-first)
                 else :
                     self.turtle.setheading(90)
-                self.turtle.forward(first)
+                    self.turtle.forward(first)
+
 
                 self.turtle.setheading(lastHeading) # restores the initial heading
 

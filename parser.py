@@ -257,9 +257,17 @@ def generateReturnQuadruple(returnValue):
 def generateERAQuadruple(function):
     quadrupleManager.addQuadruple(operators['era'], function, ' ', ' ')
 
-#function to generate ERA quadruple
 def generateGoSubQuadruple(function):
     quadrupleManager.addQuadruple(operators['goSub'], function, ' ', functionTable.getFunction(function).getFirstQuadruple())
+
+#loads new memory stack
+def generateLoadMemoryQuadruple():
+    quadrupleManager.addQuadruple(operators['loadMemory'], ' ', ' ', ' ')
+
+#restore previous memory in memory stack
+def generateRestoreMemoryQuadruple(function, temp):
+    result = quadrupleManager.addQuadruple(operators['restoreMemory'], getVariableFromFunction(function, 'global').getMemory(), ' ', temp)
+    operandsStack.append(result)
 
 #function to generate ERA quadruple
 def generateParamQuadruple(function, k):
@@ -739,13 +747,29 @@ def p_function(p):
         if lookParamStack()[functionId]  != paramsNo:
             error('function %s needs %s elements, %s given, on line '%(functionId, paramsNo, lookParamStack()[functionId]),p.lineno(0))
 
+        generateLoadMemoryQuadruple()
         generateGoSubQuadruple(functionId)
         functionCalled = functionTable.getFunction(functionId) #function called
 
-        operandsStack.append((getVariableFromFunction(functionId, 'global').getMemory()))#add return value to stack
-        typesStack.append((getVariableFromFunction(functionId, 'global').getType()))
+        #add return value to stack
+        var  = getVariableFromFunction(functionId, 'global')
+        temp = memoryManager.tempM.requestMemoryOfType(1, var.getType())
+        if var.getType == TYPES['int']:
+            functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)
+        elif var.getType == TYPES['double']:
+            functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)
+        elif var.getType == TYPES['boolean']:
+            functionTable.getFunction(getLastFunction()).increaseBooleanTempMemoryRequired(1)
+
+        generateRestoreMemoryQuadruple(functionId, temp)
+
+        #operandsStack.append((getVariableFromFunction(functionId, 'global').getMemory()))
+        typesStack.append(var.getType())
 
         paramsStack.pop()# params setted
+        #remove false bottom. My function call has been processed
+        #so i can continue with what is left on my stack
+        operatorsStack.pop()
 
 
 def p_function_called(p):
@@ -759,6 +783,9 @@ def p_function_called(p):
         else:
             generateERAQuadruple(var)
         paramsStack.append({var : 1}) #params counter
+
+    #false bottom added to execute expression in calling before what is left on my operandsStack
+    operatorsStack.append(FALSE_BOTTOM)
 
 #params to be used on function call
 def p_params(p):
@@ -1041,6 +1068,19 @@ def p_return_type_declared(p):
     '''return_type_declared :    DOUBLE ID  function_declared
                                 | INT ID  function_declared
                                 | BOOLEAN ID  function_declared'''
+    #add var with function name to global scope
+    addVariableToFunction(getLastFunction(), 'global')
+    rType = functionTable.getFunction(getLastFunction()).getReturnType()
+    getVariableFromFunction(getLastFunction(), 'global').setType(rType)
+    if rType == TYPES['int']:
+        functionTable.getFunction('global').increaseIntLocalMemoryRequired(1)
+        getVariableFromFunction(getLastFunction(), 'global').setMemory(memoryManager.globalM.requestIntMemory(1))
+    if rType == TYPES['double']:
+        functionTable.getFunction('global').increaseDoubleLocalMemoryRequired(1)
+        getVariableFromFunction(getLastFunction(), 'global').setMemory(memoryManager.globalM.requestDoubleMemory(1))
+    if rType == TYPES['boolean']:
+        functionTable.getFunction('global').increaseBooleanLocalMemoryRequired(1)
+        getVariableFromFunction(getLastFunction(), 'global').setMemory(memoryManager.globalM.requestBooleanMemory(1))
 
 #function declared. Used to know when a function has been declared
 def p_function_declared(p):
@@ -1188,20 +1228,8 @@ def p_do_while_then(p):
 def p_return_statute(p):
     '''return_statute :   RETURN expression SEMICOLON'''
     #typesStack.pop() TODO dont remember why pop i think i already solved
-    #add var with function name to global scope
-    addVariableToFunction(getLastFunction(), 'global')
-    rType = functionTable.getFunction(getLastFunction()).getReturnType()
-    getVariableFromFunction(getLastFunction(), 'global').setType(rType)
-    if rType == TYPES['int']:
-        functionTable.getFunction('global').increaseIntLocalMemoryRequired(1)
-        getVariableFromFunction(getLastFunction(), 'global').setMemory(memoryManager.globalM.requestIntMemory(1))
-    if rType == TYPES['double']:
-        functionTable.getFunction('global').increaseDoubleLocalMemoryRequired(1)
-        getVariableFromFunction(getLastFunction(), 'global').setMemory(memoryManager.globalM.requestDoubleMemory(1))
-    if rType == TYPES['boolean']:
-        functionTable.getFunction('global').increaseBooleanLocalMemoryRequired(1)
-        getVariableFromFunction(getLastFunction(), 'global').setMemory(memoryManager.globalM.requestBooleanMemory(1))
 
+    rType = functionTable.getFunction(getLastFunction()).getReturnType()
     typeGiven = typesStack.pop()
     if rType != typeGiven:
         error("return type must be %s, %s given on function %s, on line "%(TYPES.keys()[TYPES.values().index(rType)], TYPES.keys()[TYPES.values().index(typeGiven)], getLastFunction()),p.lineno(0))
@@ -1335,6 +1363,7 @@ def p_empty(p):
 # Error rule for syntax errors
 def p_error(p):
     print("Syntax error")
+    status = False
 
 # Build the parser
 parser = yacc.yacc();
@@ -1346,7 +1375,11 @@ parser.defaulted_states = {};
 #file = open("parser_test_function.txt", "r")
 #file = open("parser_test_array.txt", "r")
 #file = open("parser_test.txt", "r")
-file = open("parser_test_graphic.txt", "r")
+#file = open("parser_test_graphic.txt", "r")
+#file = open("first_draw.txt", "r")
+#file = open("recursion_test.txt", "r")
+file = open("parser_sort_test.txt", "r")
+#file = open("parser_function_test.txt", "r")
 parser.parse( file.read() )
 
 

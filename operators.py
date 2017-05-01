@@ -32,6 +32,7 @@ operators = {
     'moveForward'   : 30,
     'circle'        : 31,
     'print'         : 32,
-    'loadMemory'    : 33
+    'loadMemory'    : 33,
+    'restoreMemory' : 34
 
 }

@@ -264,6 +264,11 @@ def generateGoSubQuadruple(function):
 def generateLoadMemoryQuadruple():
     quadrupleManager.addQuadruple(operators['loadMemory'], ' ', ' ', ' ')
 
+#restore previous memory in memory stack
+def generateRestoreMemoryQuadruple(function, temp):
+    result = quadrupleManager.addQuadruple(operators['restoreMemory'], getVariableFromFunction(function, 'global').getMemory(), ' ', temp)
+    operandsStack.append(result)
+
 #function to generate ERA quadruple
 def generateParamQuadruple(function, k):
     varName = functionTable.getFunction(function).getParams()[ k - 1] #get the var memory from the parameters stack
@@ -746,8 +751,20 @@ def p_function(p):
         generateGoSubQuadruple(functionId)
         functionCalled = functionTable.getFunction(functionId) #function called
 
-        operandsStack.append((getVariableFromFunction(functionId, 'global').getMemory()))#add return value to stack
-        typesStack.append((getVariableFromFunction(functionId, 'global').getType()))
+        #add return value to stack
+        var  = getVariableFromFunction(functionId, 'global')
+        temp = memoryManager.tempM.requestMemoryOfType(1, var.getType())
+        if var.getType == TYPES['int']:
+            functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)
+        elif var.getType == TYPES['double']:
+            functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)
+        elif var.getType == TYPES['boolean']:
+            functionTable.getFunction(getLastFunction()).increaseBooleanTempMemoryRequired(1)
+
+        generateRestoreMemoryQuadruple(functionId, temp)
+
+        #operandsStack.append((getVariableFromFunction(functionId, 'global').getMemory()))
+        typesStack.append(var.getType())
 
         paramsStack.pop()# params setted
         #remove false bottom. My function call has been processed
@@ -1361,13 +1378,14 @@ parser.defaulted_states = {};
 #file = open("parser_test_graphic.txt", "r")
 #file = open("first_draw.txt", "r")
 #file = open("recursion_test.txt", "r")
-file = open("parser_function_test.txt", "r")
+file = open("parser_sort_test.txt", "r")
+#file = open("parser_function_test.txt", "r")
 parser.parse( file.read() )
 
 
 if status :
     #printSummary()
-    printQuadruples()
+    #printQuadruples()
     #printMemorySegmentMap()
 
     writeQuadruples()

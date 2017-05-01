@@ -37,6 +37,15 @@ class VirtualMachine:
         else:
             self.mStack[len(self.mStack) - 1].writeOnMemory(memory, value)
 
+    def writeOnPreviousMemory(self, memory, value):
+        memory = int(memory)
+        if memory >= 5000 and memory < 9000: #global memory
+            gMemory.writeOnMemory(memory, value)
+        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+            gMemory.writeOnMemory(memory, value)
+        else:
+            self.mStack[len(self.mStack) - 2].writeOnMemory(memory, value)
+
     def writeOnNewMemory(self, memory, value):
         memory = int(memory)
         if memory >= 5000 and memory < 9000: #global memory
@@ -301,8 +310,6 @@ class VirtualMachine:
                 self.writeOnMemory(instruction.result, first)
                 #retrieve last pointer to jump back where function was called
                 self.pc = int(self.pointerStack.pop())
-                #release memory
-                self.mStack.pop()
 
             elif instruction.operator == operators['era']:
 
@@ -503,6 +510,24 @@ class VirtualMachine:
                     return 'Error, variable used but not assigned'
 
                 self.turtle.circle(first) # restores the initial heading
+
+            elif instruction.operator == operators['restoreMemory']:
+                if self.isPointer(instruction.firstOperand): #contains array memory
+                    first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
+                else :
+                    first = self.readFromMemory(instruction.firstOperand)
+                if self.isPointer(instruction.result): #contains array memory
+                    result = self.readFromMemory(instruction.result.split('&')[1])
+                else :
+                    result = instruction.result
+
+
+                if first is None:
+                    return 'Error, variable used but not assigned'
+                self.writeOnPreviousMemory(result, first)
+
+                #release memory
+                self.mStack.pop()
 
             self.pc += 1
 

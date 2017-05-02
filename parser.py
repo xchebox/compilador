@@ -36,8 +36,6 @@ def printSummary():
         print('%s ints\n%s doubles\n%s booleans\n'%(functionTable.getFunctionTable()[f].getIntLocalMemoryRequired(), functionTable.getFunctionTable()[f].getDoubleLocalMemoryRequired(), functionTable.getFunctionTable()[f].getBooleanLocalMemoryRequired()))
         print('temp :\n')
         print('%s ints\n%s doubles\n%s booleans\n'%(functionTable.getFunctionTable()[f].getIntTempMemoryRequired(), functionTable.getFunctionTable()[f].getDoubleTempMemoryRequired(), functionTable.getFunctionTable()[f].getBooleanTempMemoryRequired()))
-        print('const :\n')
-        print('%s ints\n%s doubles\n%s booleans\n'%(functionTable.getFunctionTable()[f].getIntConstMemoryRequired(), functionTable.getFunctionTable()[f].getDoubleConstMemoryRequired(), functionTable.getFunctionTable()[f].getBooleanConstMemoryRequired()))
         print ("the variables are :")
         print('\n')
         for v in functionTable.getFunctionTable()[f].getVarTable().table:
@@ -77,12 +75,12 @@ def printMemorySegmentMap():
     for k in functionTable.table:# iterates over function table
         if k != 'global':
             f = functionTable.table[k]
-            print '%s.%s,%s,%s,%s,%s,%s,%s,%s,%s'%(k, f.getIntLocalMemoryRequired(),
+            print '%s.%s,%s,%s,%s,%s,%s'%(k, f.getIntLocalMemoryRequired(),
             f.getDoubleLocalMemoryRequired(),
             f.getBooleanLocalMemoryRequired(),
-            f.getIntConstMemoryRequired(),
-            f.getDoubleConstMemoryRequired(),
-            f.getBooleanConstMemoryRequired(),
+            #f.getIntConstMemoryRequired(),
+            #f.getDoubleConstMemoryRequired(),
+            #f.getBooleanConstMemoryRequired(),
             f.getIntTempMemoryRequired(),
             f.getDoubleTempMemoryRequired(),
             f.getBooleanTempMemoryRequired())
@@ -92,12 +90,12 @@ def writeMemorySegmentMap():
     for k in functionTable.table:# iterates over function table
         if k != 'global':
             f = functionTable.table[k]
-            s += '%s.%s,%s,%s,%s,%s,%s,%s,%s,%s.'%(k, f.getIntLocalMemoryRequired(),
+            s += '%s.%s,%s,%s,%s,%s,%s.'%(k, f.getIntLocalMemoryRequired(),
             f.getDoubleLocalMemoryRequired(),
             f.getBooleanLocalMemoryRequired(),
-            f.getIntConstMemoryRequired(),
-            f.getDoubleConstMemoryRequired(),
-            f.getBooleanConstMemoryRequired(),
+            #f.getIntConstMemoryRequired(),
+            #f.getDoubleConstMemoryRequired(),
+            #f.getBooleanConstMemoryRequired(),
             f.getIntTempMemoryRequired(),
             f.getDoubleTempMemoryRequired(),
             f.getBooleanTempMemoryRequired())
@@ -412,7 +410,7 @@ def generateRectangleQuadruple():#TODO implements these three down
 
     temp = memoryManager.consM.requestIntMemory(1)
     memoryManager.consM.writeOnMemory(temp, 90, TYPES['int']) #TODO remove this to manage constants
-    functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
+    #functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
 
     quadrupleManager.addQuadruple(operators['moveForward'], width,' ',' ')
 
@@ -446,7 +444,7 @@ def generateTriangleQuadruple():
 
     temp = memoryManager.consM.requestIntMemory(1)
     memoryManager.consM.writeOnMemory(temp, 120, TYPES['int']) #TODO remove this to manage constants
-    functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
+    #functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
 
     quadrupleManager.addQuadruple(operators['moveForward'], size,' ',' ')
 
@@ -1037,8 +1035,8 @@ def p_term_int_used(p):
     operandsStack.append(const)
     #type added to stack
     typesStack.append(TYPES['int'])
-    if not onGlobalScope():# increase constant memory required
-        functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
+    #if not onGlobalScope():# increase constant memory required
+        #functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
 
 #rule to identify the used type
 def p_term_double_used(p):
@@ -1050,8 +1048,8 @@ def p_term_double_used(p):
 
     #type added to stack
     typesStack.append(TYPES['double'])
-    if not onGlobalScope():# increase constant memory required
-        functionTable.getFunction(getLastFunction()).increaseDoubleConstMemoryRequired(1)
+    #if not onGlobalScope():# increase constant memory required
+    #    functionTable.getFunction(getLastFunction()).increaseDoubleConstMemoryRequired(1)
 
 #rule to identify the used type
 def p_term_boolean_used(p):
@@ -1063,8 +1061,8 @@ def p_term_boolean_used(p):
 
     #type added to stack
     typesStack.append(TYPES['boolean'])
-    if not onGlobalScope():# increase constant memory required
-        functionTable.getFunction(getLastFunction()).increaseBooleanConstMemoryRequired(1)
+    #if not onGlobalScope():# increase constant memory required
+        #functionTable.getFunction(getLastFunction()).increaseBooleanConstMemoryRequired(1)
 
 #rule to identify a use of parenthesis
 def p_term_parenthesis_used(p):
@@ -1160,13 +1158,6 @@ def p_param_declared(p):
 def p_mult_params_declaration(p):
     '''mult_params_declaration :      COMMA param_declaration
                                     | empty'''
-
-
-#different types
-def p_type(p):##############################delete this
-    '''type :     DOUBLE
-                | INT
-                | BOOLEAN'''
 
 
 #statute
@@ -1407,9 +1398,9 @@ parser.defaulted_states = {};
 #file = open("parser_first_draw.txt", "r")
 #file = open("parser_input_test.txt", "r")
 #file = open("recursion_test.txt", "r")
-#file = open("parser_sort_test.txt", "r")
+file = open("parser_sort_test.txt", "r")
 #file = open("parser_function_test.txt", "r")
-file = open("parser_general_test.txt", "r")
+#file = open("parser_general_test.txt", "r")
 parser.parse( file.read() )
 
 

@@ -22,43 +22,43 @@ class VirtualMachine:
     def readFromMemory(self, memory):
         #print memory
         memory = int(memory)
-        if memory >= 5000 and memory < 9000: #global memory
+        if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             return gMemory.readFromMemory(memory)
-        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory TODO delete this to manage constants
             return gMemory.readFromMemory(memory)
         else :
             return self.mStack[len(self.mStack) - 1].readFromMemory(memory)
 
     def writeOnMemory(self, memory, value):
         memory = int(memory)
-        if memory >= 5000 and memory < 9000: #global memory
+        if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             gMemory.writeOnMemory(memory, value)
-        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory TODO delete this to manage constants
             gMemory.writeOnMemory(memory, value)
         else:
             self.mStack[len(self.mStack) - 1].writeOnMemory(memory, value)
 
     def writeOnPreviousMemory(self, memory, value):
         memory = int(memory)
-        if memory >= 5000 and memory < 9000: #global memory
+        if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             gMemory.writeOnMemory(memory, value)
-        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory TODO delete this to manage constants
             gMemory.writeOnMemory(memory, value)
         else:
             self.mStack[len(self.mStack) - 2].writeOnMemory(memory, value)
 
     def writeOnNewMemory(self, memory, value):
         memory = int(memory)
-        if memory >= 5000 and memory < 9000: #global memory
+        if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             gMemory.writeOnMemory(memory, value)
-        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory TODO delete this to manage constants
             gMemory.writeOnMemory(memory, value)
         else:
             self.tempMemory.writeOnMemory(memory, value)
 
     def isInteger(self, memory):
         memory = int(memory)
-        return (memory >= 0 and memory < 500) or (memory >= 2000 and memory < 3000) or (memory >= 5000 and memory < 5600) or (memory >= 9000 and memory < 10000)
+        return (memory >= gMemory.globalIntI and memory < gMemory.globalIntF) or (memory >= gMemory.constIntI and memory < gMemory.constIntF) or (memory >= gMemory.tempIntI and memory < gMemory.tempIntF) or (memory >= gMemory.localIntI and memory < gMemory.localIntF)
 
     def requestMemory(self, functionName):
         self.tempMemory = MemoryManager()
@@ -217,7 +217,7 @@ class VirtualMachine:
 
                 if first is None:
                     return 'Error, variable used but not assigned'
-                if self.isInteger(instruction.result):
+                if self.isInteger(result):
                     first = int(first)
                 self.writeOnMemory(result, first)
 
@@ -295,7 +295,6 @@ class VirtualMachine:
 
 
             elif instruction.operator == operators['gotoF']:
-
                 if self.isPointer(instruction.firstOperand): #contains array memory
                     first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
                 else :

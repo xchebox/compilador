@@ -2,91 +2,119 @@ from operands import TYPES
 
 class MemoryManager:
     def __init__(self):
-        #const memory
-        self.consM = Memory(0, 300, 500, 300, 1000, 300)
-        #temp memory
-        self.tempM = Memory(2000, 500, 3000, 500, 4000, 500)
+        #memory first and final local and temo memory
+        self.tempIntI = 6000
+        self.tempIntF = 6999
+        self.tempDoubleI = 7000
+        self.tempDoubleF = 7999
+        self.tempBooleanI = 8000
+        self.tempBooleanF = 8999
+        self.localIntI = 9000
+        self.localIntF = 9999
+        self.localDoubleI = 10000
+        self.localDoubleF = 10999
+        self.localBooleanI = 11000
+        self.localBooleanF = 11999
+
+        #memory first and final global and constant memory
+        self.globalIntI = 0
+        self.globalIntF = 999
+        self.globalDoubleI = 1000
+        self.globalDoubleF = 1999
+        self.globalBooleanI = 2000
+        self.globalBooleanF = 2999
+        self.constIntI = 3000
+        self.constIntF = 3999
+        self.constDoubleI = 4000
+        self.constDoubleF = 4999
+        self.constBooleanI = 5000
+        self.constBooleanF = 5999
+
         #global Memory
-        self.globalM = Memory(5000, 300, 5600, 300, 6000, 300)
+        self.globalM = Memory(self.globalIntI, self.globalIntF, self.globalDoubleI, self.globalDoubleF, self.globalBooleanI, self.globalBooleanF)
+        #const memory
+        self.consM = Memory(self.constIntI, self.constIntF, self.constDoubleI, self.constDoubleF, self.constBooleanI, self.constBooleanF)
+        #temp memory
+        self.tempM = Memory(self.tempIntI, self.tempIntF, self.tempDoubleI, self.tempDoubleF, self.tempBooleanI, self.tempBooleanF)
         #localMemory
-        self.localM = Memory(9000, 300, 10000, 300, 11000, 300)
+        self.localM = Memory(self.localIntI, self.localIntF, self.localDoubleI, self.localDoubleF, self.localBooleanI, self.localBooleanF)
 
 
     #sets the value into the memory space
     def writeOnMemory(self, memory, value):
-        if memory >= 0 and memory < 500:
+        if memory >= self.constIntI and memory < self.constIntF:
             #print "int constant"
             self.consM.writeOnMemory(memory, value, TYPES['int'])
-        if memory >= 500 and memory < 1000:
+        if memory >= self.constDoubleI and memory < self.constDoubleF:
             #print "double constant"
             self.consM.writeOnMemory(memory, value, TYPES['double'])
-        if memory >= 1000 and memory < 2000:
+        if memory >= self.globalBooleanI and memory < self.globalBooleanF:
             #print "boolean constant"
             self.consM.writeOnMemory(memory, value, TYPES['boolean'])
-        if memory >= 2000 and memory < 3000:
+        if memory >= self.tempIntI and memory < self.tempIntF:
             #print "int temp"
             self.tempM.writeOnMemory(memory, value, TYPES['int'])
-        if memory >= 3000 and memory < 4000:
+        if memory >= self.tempDoubleI and memory < self.tempDoubleF:
             #print "double temp"
             self.tempM.writeOnMemory(memory, value, TYPES['double'])
-        if memory >= 4000 and memory < 5000:
+        if memory >= self.tempBooleanI and memory < self.tempBooleanF:
             #print "boolean temp"
             self.tempM.writeOnMemory(memory, value, TYPES['boolean'])
-        if memory >= 5000 and memory < 5600:
+        if memory >= self.globalIntI and memory < self.globalIntF:
             #print "int global"
             self.globalM.writeOnMemory(memory, value, TYPES['int'])
-        if memory >= 5600 and memory < 6000:
+        if memory >= self.globalDoubleI and memory < self.globalDoubleF:
             #print "double global"
             self.globalM.writeOnMemory(memory, value, TYPES['double'])
-        if memory >= 6000 and memory < 9000:
+        if memory >= self.globalBooleanI and memory < self.globalBooleanF:
             #print "boolean global"
             self.globalM.writeOnMemory(memory, value, TYPES['boolean'])
-        if memory >= 9000 and memory < 10000:
+        if memory >= self.localIntI and memory < self.localIntF:
             #print "int local"
             self.localM.writeOnMemory(memory, value, TYPES['int'])
-        if memory >= 10000 and memory < 11000:
+        if memory >= self.localDoubleI and memory < self.localDoubleF:
             #print "double local"
             self.localM.writeOnMemory(memory, value, TYPES['double'])
-        if memory >= 11000 :
+        if memory >= self.localBooleanI :
             #print "boolean local"
             self.localM.writeOnMemory(memory, value, TYPES['boolean'])
 
     #reads the value from the memory space
     def readFromMemory(self, memory):
-        if memory >= 0 and memory < 500:
+        if memory >= self.constIntI and memory < self.constIntF:
             #print "int constant"
             return self.consM.readFromMemory(memory, TYPES['int'])
-        if memory >= 500 and memory < 1000:
+        if memory >= self.constDoubleI and memory < self.constDoubleF:
             #print "double constant"
             return self.consM.readFromMemory(memory, TYPES['double'])
-        if memory >= 1000 and memory < 2000:
+        if memory >= self.constBooleanI and memory < self.constBooleanF:
             #print "boolean constant"
             return self.consM.readFromMemory(memory, TYPES['boolean'])
-        if memory >= 2000 and memory < 3000:
+        if memory >= self.tempIntI and memory < self.tempIntF:
             #print "int temp"
             return self.tempM.readFromMemory(memory, TYPES['int'])
-        if memory >= 3000 and memory < 4000:
+        if memory >= self.tempDoubleI and memory < self.tempDoubleF:
             #print "double temp"
             return self.tempM.readFromMemory(memory, TYPES['double'])
-        if memory >= 4000 and memory < 5000:
+        if memory >= self.tempBooleanI and memory < self.tempBooleanF:
             #print "boolean temp"
             return self.tempM.readFromMemory(memory, TYPES['boolean'])
-        if memory >= 5000 and memory < 5600:
+        if memory >= self.globalIntI and memory < self.globalIntF:
             #print "int global"
             return self.globalM.readFromMemory(memory, TYPES['int'])
-        if memory >= 5600 and memory < 6000:
+        if memory >= self.globalDoubleI and memory < self.globalDoubleF:
             #print "double global"
             return self.globalM.readFromMemory(memory, TYPES['double'])
-        if memory >= 6000 and memory < 9000:
+        if memory >= self.globalBooleanI and memory < self.globalBooleanF:
             #print "boolean global"
             return self.globalM.readFromMemory(memory, TYPES['boolean'])
-        if memory >= 9000 and memory < 10000:
+        if memory >= self.localIntI and memory < self.localIntF:
             #print "int local"
             return self.localM.readFromMemory(memory, TYPES['int'])
-        if memory >= 10000 and memory < 11000:
+        if memory >= self.localDoubleI and memory < self.localDoubleF:
             #print "double local"
             return self.localM.readFromMemory(memory, TYPES['double'])
-        if memory >= 11000 :
+        if memory >= self.localBooleanI :
             #print "boolean local"
             return self.localM.readFromMemory(memory, TYPES['boolean'])
         return None
@@ -95,9 +123,9 @@ class MemoryManager:
     #clear local and temporal memory and constant memory
     def clearMemory(self):
         #temp memory
-        self.tempM = Memory(2000, 500, 3000, 500, 4000, 500)
+        self.tempM = Memory(self.tempIntI, self.tempIntF, self.tempDoubleI, self.tempDoubleF, self.tempBooleanI, self.tempBooleanF)
         #localMemory
-        self.localM = Memory(9000, 300, 10000, 300, 11000, 300)
+        self.localM = Memory(self.localIntI, self.localIntF, self.localDoubleI, self.localDoubleF, self.localBooleanI, self.localBooleanF)
         #const memory
         #elf.consM = Memory(0, 300, 500, 300, 1000, 300) TODO uncomment this and manage contant memory
 
@@ -115,9 +143,9 @@ class Memory:
         self.booleanSegmentBeginning = booBeg
 
         #different values to simulate max memory
-        self.integerMaxSize = self.integerSegmentBeginning + intSize
-        self.doubleMaxSize = self.doubleSegmentBeginning + douSize
-        self.booleanMaxSize = self.booleanSegmentBeginning + booSize
+        self.integerMaxSize = intSize
+        self.doubleMaxSize = douSize
+        self.booleanMaxSize = booSize
 
         #actual memory requested/used
         self.integerMemoryRequested = self.integerSegmentBeginning

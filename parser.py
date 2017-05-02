@@ -472,6 +472,25 @@ def generateCircleQuadruple():
     quadrupleManager.addQuadruple(operators['circle'],operandsStack.pop(),' ',' ')
     return 0
 
+def generateInputQuadruple(varId):
+    if onGlobalScope():
+        if not varExistsOnFunction(varId, 'global'):
+            return -2
+        var = getVariableFromFunction(varId, 'global')
+    else :
+        if not varExistsOnFunction(varId, getLastFunction()):
+            if not varExistsOnFunction(varId, 'global'):
+                return -2
+            else :
+                var = getVariableFromFunction(varId, 'global')
+        else :
+            var = getVariableFromFunction(varId, getLastFunction())
+    if len(var.getDimension()) > 0:
+        return -1
+    quadrupleManager.addQuadruple(operators['input'],' ',' ',var.getMemory())
+    return 0
+
+
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
 
@@ -1161,6 +1180,7 @@ def p_statute(p):
                     | comment_statute statute
                     | print_statute statute
                     | graphic_statute statute
+                    | input_statute statute
                     | empty'''
 
 #if
@@ -1246,11 +1266,19 @@ def p_function_statute(p):
 
 #comment statute
 def p_comment_statute(p):
-    '''comment_statute :    COMMENT statute'''
+    '''comment_statute :    COMMENT'''
 
 def p_print_statute(p):
     '''print_statute : PRINT LPAREN expression RPAREN SEMICOLON  '''
     generatePrintQuadruple()
+
+def p_input_statute(p):
+    '''input_statute : INPUT LPAREN ID RPAREN SEMICOLON  '''
+    quad = generateInputQuadruple(p[3])
+    if  quad == -1:
+        error("Input need a not array variable")
+    if quad == -2 :
+        error("var does not exist")
 
 
 #turtle graphics statutes
@@ -1376,16 +1404,18 @@ parser.defaulted_states = {};
 #file = open("parser_test_array.txt", "r")
 #file = open("parser_test.txt", "r")
 #file = open("parser_test_graphic.txt", "r")
-file = open("parser_first_draw.txt", "r")
+#file = open("parser_first_draw.txt", "r")
+#file = open("parser_input_test.txt", "r")
 #file = open("recursion_test.txt", "r")
 #file = open("parser_sort_test.txt", "r")
 #file = open("parser_function_test.txt", "r")
+file = open("parser_general_test.txt", "r")
 parser.parse( file.read() )
 
 
 if status :
     #printSummary()
-    #printQuadruples()
+    printQuadruples()
     #printMemorySegmentMap()
 
     writeQuadruples()

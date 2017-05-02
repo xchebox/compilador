@@ -33,6 +33,7 @@ operators = {
     'circle'        : 31,
     'print'         : 32,
     'loadMemory'    : 33,
-    'restoreMemory' : 34
+    'restoreMemory' : 34,
+    'input'         : 35
 
 }

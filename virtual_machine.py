@@ -16,7 +16,7 @@ class VirtualMachine:
         self.memoryMap = {}
         self.mStack = [] #memory stack
         self.turtle = turtle.Turtle()
-        self.screen = turtle.Screen()
+        self.screen = None
 
 
     def readFromMemory(self, memory):
@@ -69,6 +69,7 @@ class VirtualMachine:
         return operand[0] == '*'
 
     def initScreen(self):
+        self.screen = turtle.Screen()
         self.screen.title('Code To Paint')
         self.screen.colormode(255)
         self.screen.delay(10)
@@ -362,6 +363,16 @@ class VirtualMachine:
 
                 print(first)
 
+            elif instruction.operator == operators['input']:
+                first = (raw_input("Type value: \n"))
+
+                if first is None:
+                    return 'Not value typed'
+                if isinstance(first, basestring):
+                    return 'Typed value must be integer or double'
+
+                self.writeOnMemory(instruction.result, first)
+
             elif instruction.operator == operators['penUp']:
                 self.turtle.penup()
 
@@ -531,6 +542,6 @@ class VirtualMachine:
 
             self.pc += 1
 
-        self.turtle.getscreen().getcanvas().postscript(file="drawing.eps")
+        #self.turtle.getscreen().getcanvas().postscript(file="drawing.eps")
 
         return 'Process completed successfully'

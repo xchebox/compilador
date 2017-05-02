@@ -34,6 +34,7 @@ reserved = {
     'circle'            : 'CIRCLE',
     'moveForward'       : 'MOVEFORWARD',
     'print'             : 'PRINT',
+    'input'             : 'INPUT',
 }
 
 tokens = [

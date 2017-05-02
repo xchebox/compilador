@@ -1,7 +1,7 @@
 from operands import TYPES
 
 class MemoryManager:
-    def __init__(self):
+    def __init__(self, intTempSize = None, doubleTempSize = None, booleanTempSize = None, intLocalSize = None, doubleLocalSize = None, booleanLocalSize = None):
         #memory first and final local and temo memory
         self.tempIntI = 6000
         self.tempIntF = 6999
@@ -15,6 +15,20 @@ class MemoryManager:
         self.localDoubleF = 10999
         self.localBooleanI = 11000
         self.localBooleanF = 11999
+
+        # if is called as memory instance then you only request the neccesary memory
+        if not intTempSize is None:
+            self.tempIntF = self.tempIntI + intTempSize
+        if not doubleTempSize is None:
+            self.tempDoubleF = self.tempDoubleI + doubleTempSize
+        if not booleanTempSize is None:
+            self.tempBooleanF = self.tempBooleanI + booleanTempSize
+        if not intLocalSize is None:
+            self.localIntF = self.localIntI + intLocalSize
+        if not doubleLocalSize is None:
+            self.localDoubleF = self.localDoubleI + doubleLocalSize
+        if not booleanLocalSize is None:
+            self.localBooleanF = self.localBooleanI + booleanLocalSize
 
         #memory first and final global and constant memory
         self.globalIntI = 0
@@ -30,10 +44,17 @@ class MemoryManager:
         self.constBooleanI = 5000
         self.constBooleanF = 5999
 
-        #global Memory
-        self.globalM = Memory(self.globalIntI, self.globalIntF, self.globalDoubleI, self.globalDoubleF, self.globalBooleanI, self.globalBooleanF)
-        #const memory
-        self.consM = Memory(self.constIntI, self.constIntF, self.constDoubleI, self.constDoubleF, self.constBooleanI, self.constBooleanF)
+        # if called as instance memory does not request global or constant memory
+        if not intTempSize is None:
+            #global Memory
+            self.globalM = Memory(0, 0, 0, 0, 0, 0)
+            #const memory
+            self.consM = Memory(0, 0, 0, 0, 0, 0)
+        else:
+            #global Memory
+            self.globalM = Memory(self.globalIntI, self.globalIntF, self.globalDoubleI, self.globalDoubleF, self.globalBooleanI, self.globalBooleanF)
+            #const memory
+            self.consM = Memory(self.constIntI, self.constIntF, self.constDoubleI, self.constDoubleF, self.constBooleanI, self.constBooleanF)
         #temp memory
         self.tempM = Memory(self.tempIntI, self.tempIntF, self.tempDoubleI, self.tempDoubleF, self.tempBooleanI, self.tempBooleanF)
         #localMemory

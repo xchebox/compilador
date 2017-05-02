@@ -290,36 +290,36 @@ def generateAuxArrayFunction(mDimension):
     quadrupleManager.addQuadruple(operators['*'], operandsStack.pop(), "*%s"%mDimension, temp)#TODO check when to delete temps and change mDimension for memory
     operandsStack.append(temp)
     if onGlobalScope():
-        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction('global').increaseIntTempMemoryRequired(1)#result always increments one by one
     else :
-        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)#result always increments one by one
 
 def generateSumDimensionFunction():
     temp = memoryManager.tempM.requestIntMemory(1)
     quadrupleManager.addQuadruple(operators['+'], operandsStack.pop(), operandsStack.pop(), temp)
     operandsStack.append(temp)
     if onGlobalScope():
-        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction('global').increaseIntTempMemoryRequired(1)#result always increments one by one
     else :
-        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)#result always increments one by one
 
 def generateSumAllDimensionsQuadruple():
     temp = memoryManager.tempM.requestIntMemory(1)
     quadrupleManager.addQuadruple(operators['+'], operandsStack.pop(), operandsStack.pop(), temp)
     operandsStack.append(temp)
     if onGlobalScope():
-        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction('global').increaseIntTempMemoryRequired(1)#result always increments one by one
     else :
-        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)#result always increments one by one
 
 def generateAddBaseMemoryQuadruple(baseMemory):
     temp = memoryManager.tempM.requestIntMemory(1)
     quadrupleManager.addQuadruple(operators['+'], operandsStack.pop(), "*%s"%baseMemory, temp)
     operandsStack.append(temp)
     if onGlobalScope():
-        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction('global').increaseIntTempMemoryRequired(1)#result always increments one by one
     else :
-        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)#result always increments one by one
 
 def generateAsignationArrayQuadruple(varMemory, varType, id):
     resultType = semantic_cube[typesStack.pop()][operators['=']][varType]

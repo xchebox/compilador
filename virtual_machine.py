@@ -61,7 +61,14 @@ class VirtualMachine:
         return (memory >= gMemory.globalIntI and memory < gMemory.globalIntF) or (memory >= gMemory.constIntI and memory < gMemory.constIntF) or (memory >= gMemory.tempIntI and memory < gMemory.tempIntF) or (memory >= gMemory.localIntI and memory < gMemory.localIntF)
 
     def requestMemory(self, functionName):
-        self.tempMemory = MemoryManager()
+        neccesaryMemory = self.memoryMap[functionName]
+        self.tempMemory = MemoryManager(
+        int(neccesaryMemory[3]),
+        int(neccesaryMemory[4]),
+        int(neccesaryMemory[5]),
+        int(neccesaryMemory[0]),
+        int(neccesaryMemory[1]),
+        int(neccesaryMemory[2]))
 
     def loadMemory(self):
         self.mStack.append(self.tempMemory)

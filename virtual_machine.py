@@ -56,6 +56,10 @@ class VirtualMachine:
         else:
             self.tempMemory.writeOnMemory(memory, value)
 
+    def isInteger(self, memory):
+        memory = int(memory)
+        return (memory >= 0 and memory < 500) or (memory >= 2000 and memory < 3000) or (memory >= 5000 and memory < 5600) or (memory >= 9000 and memory < 10000)
+
     def requestMemory(self, functionName):
         self.tempMemory = MemoryManager()
 
@@ -122,6 +126,9 @@ class VirtualMachine:
 
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
+                if isinstance(first, int) or isinstance(double, int):
+                    first = int(first)
+                    second = int(second)
                 self.writeOnMemory(instruction.result,first + second)
 
             elif instruction.operator == operators['-']:
@@ -136,6 +143,10 @@ class VirtualMachine:
 
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
+
+                if isinstance(first, int) or isinstance(double, int):
+                    first = int(first)
+                    second = int(second)
 
                 self.writeOnMemory(instruction.result, first - second)
 
@@ -206,6 +217,8 @@ class VirtualMachine:
 
                 if first is None:
                     return 'Error, variable used but not assigned'
+                if self.isInteger(instruction.result):
+                    first = int(first)
                 self.writeOnMemory(result, first)
 
             elif instruction.operator == operators['<']:
@@ -250,6 +263,11 @@ class VirtualMachine:
 
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
+                if not isinstance(first, bool):
+                    first = not first < 0
+                if not isinstance(second, bool):
+                    second = not second < 0
+
 
                 self.writeOnMemory(instruction.result, first and second)
 
@@ -265,6 +283,10 @@ class VirtualMachine:
 
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
+                if not isinstance(first, bool):
+                    first = not first < 0
+                if not isinstance(second, bool):
+                    second = not second < 0
 
                 self.writeOnMemory(instruction.result, first or second)
 

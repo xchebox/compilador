@@ -1,7 +1,7 @@
 #from memory import MemoryManager
 from quadruple import Quadruple
 from operators import operators
-from memory import memoryManager as gMemory, MemoryManager
+from memory import memoryManager as gMemory, MemoryManager, MemoryCounter
 import turtle
 
 class VirtualMachine:
@@ -17,6 +17,7 @@ class VirtualMachine:
         self.mStack = [] #memory stack
         self.turtle = turtle.Turtle()
         self.screen = None
+        self.counter = MemoryCounter()
 
 
     def readFromMemory(self, memory):
@@ -24,7 +25,7 @@ class VirtualMachine:
         memory = int(memory)
         if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             return gMemory.readFromMemory(memory)
-        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory
             return gMemory.readFromMemory(memory)
         else :
             return self.mStack[len(self.mStack) - 1].readFromMemory(memory)
@@ -33,7 +34,7 @@ class VirtualMachine:
         memory = int(memory)
         if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             gMemory.writeOnMemory(memory, value)
-        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory 
             gMemory.writeOnMemory(memory, value)
         else:
             self.mStack[len(self.mStack) - 1].writeOnMemory(memory, value)
@@ -42,7 +43,7 @@ class VirtualMachine:
         memory = int(memory)
         if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             gMemory.writeOnMemory(memory, value)
-        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory
             gMemory.writeOnMemory(memory, value)
         else:
             self.mStack[len(self.mStack) - 2].writeOnMemory(memory, value)
@@ -51,7 +52,7 @@ class VirtualMachine:
         memory = int(memory)
         if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             gMemory.writeOnMemory(memory, value)
-        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory
             gMemory.writeOnMemory(memory, value)
         else:
             self.tempMemory.writeOnMemory(memory, value)
@@ -68,7 +69,30 @@ class VirtualMachine:
         int(neccesaryMemory[5]),
         int(neccesaryMemory[0]),
         int(neccesaryMemory[1]),
-        int(neccesaryMemory[2]))
+        int(neccesaryMemory[2]),
+        self.counter.tempInt,
+        self.counter.tempDouble,
+        self.counter.tempBoolean,
+        self.counter.localInt,
+        self.counter.localDouble,
+        self.counter.localBoolean)
+        #memory added to counter
+        self.counter.tempInt += int(neccesaryMemory[3])
+        self.counter.tempDouble += int(neccesaryMemory[4])
+        self.counter.tempBoolean += int(neccesaryMemory[5])
+        self.counter.localInt += int(neccesaryMemory[0])
+        self.counter.localDouble += int(neccesaryMemory[1])
+        self.counter.localBoolean += int(neccesaryMemory[2])
+
+    def releaseMemory(self):
+        m = self.mStack[len(self.mStack) - 1]
+        self.counter.tempInt -= int(m.intTempOff)
+        self.counter.tempDouble -= int(m.doubleTempOff)
+        self.counter.tempBoolean -= int(m.booleanTempOff)
+        self.counter.localInt -= int(m.intLocalOff)
+        self.counter.localDouble -= int(m.doubleLocalOff)
+        self.counter.localBoolean -= int(m.booleanLocalOff)
+        self.mStack.pop()
 
     def loadMemory(self):
         self.mStack.append(self.tempMemory)
@@ -573,7 +597,7 @@ class VirtualMachine:
                 self.writeOnPreviousMemory(result, first)
 
                 #release memory
-                self.mStack.pop()
+                self.releaseMemory()
 
             self.pc += 1
 

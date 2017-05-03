@@ -1,7 +1,8 @@
 from operands import TYPES
 
 class MemoryManager:
-    def __init__(self, intTempSize = None, doubleTempSize = None, booleanTempSize = None, intLocalSize = None, doubleLocalSize = None, booleanLocalSize = None):
+    def __init__(self, intTempSize = None, doubleTempSize = None, booleanTempSize = None, intLocalSize = None, doubleLocalSize = None, booleanLocalSize = None,
+     intTempOff = None, doubleTempOff = None, booleanTempOff = None, intLocalOff = None, doubleLocalOff = None, booleanLocalOff = None):
         #memory first and final local and temo memory
         self.tempIntI = 6000
         self.tempIntF = 6999
@@ -15,6 +16,33 @@ class MemoryManager:
         self.localDoubleF = 10999
         self.localBooleanI = 11000
         self.localBooleanF = 11999
+
+        self.intTempOff = 0
+        self.doubleTempOff = 0
+        self.booleanTempOff = 0
+        self.intLocalOff = 0
+        self.doubleLocalOff = 0
+        self.booleanLocalOff = 0
+
+        #is called with offset. Need to reallocate memory
+        if not intTempOff is None:
+            self.tempIntI += intTempOff
+            self.intTempOff = intTempOff
+        if not doubleTempOff is None:
+            self.tempDoubleI += doubleTempOff
+            self.doubleTempOff = doubleTempOff
+        if not booleanTempOff is None:
+            self.tempBooleanI += booleanTempOff
+            self.booleanTempOff = booleanTempOff
+        if not intLocalOff is None:
+            self.localIntI += intLocalOff
+            self.intLocalOff = intLocalOff
+        if not doubleLocalOff is None:
+            self.localDoubleI += doubleLocalOff
+            self.doubleLocalOff = doubleLocalOff
+        if not booleanLocalOff is None:
+            self.localBooleanI += booleanLocalOff
+            self.booleanLocalOff = booleanLocalOff
 
         # if is called as memory instance then you only request the neccesary memory
         if not intTempSize is None:
@@ -73,15 +101,15 @@ class MemoryManager:
         if memory >= self.globalBooleanI and memory < self.globalBooleanF:
             #print "boolean constant"
             self.consM.writeOnMemory(memory, value, TYPES['boolean'])
-        if memory >= self.tempIntI and memory < self.tempIntF:
+        if memory >= self.tempIntI - self.intTempOff and memory < self.tempIntF - self.intTempOff:
             #print "int temp"
-            self.tempM.writeOnMemory(memory, value, TYPES['int'])
-        if memory >= self.tempDoubleI and memory < self.tempDoubleF:
+            self.tempM.writeOnMemory(memory - self.intTempOff, value, TYPES['int'])
+        if memory >= self.tempDoubleI - self.doubleTempOff and memory < self.tempDoubleF - self.doubleTempOff:
             #print "double temp"
-            self.tempM.writeOnMemory(memory, value, TYPES['double'])
-        if memory >= self.tempBooleanI and memory < self.tempBooleanF:
+            self.tempM.writeOnMemory(memory - self.doubleTempOff, value, TYPES['double'])
+        if memory >= self.tempBooleanI - self.booleanTempOff and memory < self.tempBooleanF - self.booleanTempOff:
             #print "boolean temp"
-            self.tempM.writeOnMemory(memory, value, TYPES['boolean'])
+            self.tempM.writeOnMemory(memory - self.booleanTempOff, value, TYPES['boolean'])
         if memory >= self.globalIntI and memory < self.globalIntF:
             #print "int global"
             self.globalM.writeOnMemory(memory, value, TYPES['int'])
@@ -91,16 +119,16 @@ class MemoryManager:
         if memory >= self.globalBooleanI and memory < self.globalBooleanF:
             #print "boolean global"
             self.globalM.writeOnMemory(memory, value, TYPES['boolean'])
-        if memory >= self.localIntI and memory < self.localIntF:
+        if memory >= self.localIntI - self.intLocalOff and memory < self.localIntF - self.intLocalOff:
             #print "int local"
             #print value
-            self.localM.writeOnMemory(memory, value, TYPES['int'])
-        if memory >= self.localDoubleI and memory < self.localDoubleF:
+            self.localM.writeOnMemory(memory - self.intLocalOff, value, TYPES['int'])
+        if memory >= self.localDoubleI - self.doubleLocalOff and memory < self.localDoubleF - self.doubleLocalOff:
             #print "double local"
-            self.localM.writeOnMemory(memory, value, TYPES['double'])
-        if memory >= self.localBooleanI :
+            self.localM.writeOnMemory(memory - self.doubleLocalOff, value, TYPES['double'])
+        if memory >= self.localBooleanI - self.booleanLocalOff :
             #print "boolean local"
-            self.localM.writeOnMemory(memory, value, TYPES['boolean'])
+            self.localM.writeOnMemory(memory - self.booleanLocalOff, value, TYPES['boolean'])
 
     #reads the value from the memory space
     def readFromMemory(self, memory):
@@ -114,15 +142,15 @@ class MemoryManager:
         if memory >= self.constBooleanI and memory < self.constBooleanF:
             #print "boolean constant"
             return self.consM.readFromMemory(memory, TYPES['boolean'])
-        if memory >= self.tempIntI and memory < self.tempIntF:
+        if memory >= self.tempIntI - self.intTempOff and memory < self.tempIntF - self.intTempOff:
             #print "int temp"
-            return self.tempM.readFromMemory(memory, TYPES['int'])
-        if memory >= self.tempDoubleI and memory < self.tempDoubleF:
+            return self.tempM.readFromMemory(memory - self.intTempOff, TYPES['int'])
+        if memory >= self.tempDoubleI - self.doubleTempOff and memory < self.tempDoubleF - self.doubleTempOff:
             #print "double temp"
-            return self.tempM.readFromMemory(memory, TYPES['double'])
-        if memory >= self.tempBooleanI and memory < self.tempBooleanF:
+            return self.tempM.readFromMemory(memory - self.doubleTempOff, TYPES['double'])
+        if memory >= self.tempBooleanI - self.booleanTempOff and memory < self.tempBooleanF - self.booleanTempOff:
             #print "boolean temp"
-            return self.tempM.readFromMemory(memory, TYPES['boolean'])
+            return self.tempM.readFromMemory(memory - self.booleanTempOff, TYPES['boolean'])
         if memory >= self.globalIntI and memory < self.globalIntF:
             #print "int global"
             return self.globalM.readFromMemory(memory, TYPES['int'])
@@ -132,16 +160,16 @@ class MemoryManager:
         if memory >= self.globalBooleanI and memory < self.globalBooleanF:
             #print "boolean global"
             return self.globalM.readFromMemory(memory, TYPES['boolean'])
-        if memory >= self.localIntI and memory < self.localIntF:
+        if memory >= self.localIntI - self.intLocalOff and memory < self.localIntF - self.intLocalOff:
             #print memory >= self.localIntI and memory < self.localIntF
             #print "int local"
-            return self.localM.readFromMemory(memory, TYPES['int'])
-        if memory >= self.localDoubleI and memory < self.localDoubleF:
+            return self.localM.readFromMemory(memory - self.intLocalOff, TYPES['int'])
+        if memory >= self.localDoubleI - self.doubleLocalOff and memory < self.localDoubleF - self.doubleLocalOff:
             #print "double local"
-            return self.localM.readFromMemory(memory, TYPES['double'])
-        if memory >= self.localBooleanI :
+            return self.localM.readFromMemory(memory - self.doubleLocalOff , TYPES['double'])
+        if memory >= self.localBooleanI - self.booleanLocalOff:
             #print "boolean local"
-            return self.localM.readFromMemory(memory, TYPES['boolean'])
+            return self.localM.readFromMemory(memory - self.booleanLocalOff, TYPES['boolean'])
         return None
 
 
@@ -152,7 +180,7 @@ class MemoryManager:
         #localMemory
         self.localM = Memory(self.localIntI, self.localIntF, self.localDoubleI, self.localDoubleF, self.localBooleanI, self.localBooleanF)
         #const memory
-        #elf.consM = Memory(0, 300, 500, 300, 1000, 300) TODO uncomment this and manage contant memory
+        #elf.consM = Memory(0, 300, 500, 300, 1000, 300)
 
 
 class Memory:
@@ -238,5 +266,13 @@ class Memory:
         self.booleanStack[memoryToReturn] = None
         return memoryToReturn
 
+class MemoryCounter:
+    def __init__(self):
+        self.tempInt = 0
+        self.tempDouble = 0
+        self.tempBoolean = 0
+        self.localInt = 0
+        self.localDouble = 0
+        self.localBoolean = 0
 
 memoryManager = MemoryManager()

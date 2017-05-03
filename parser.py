@@ -9,7 +9,6 @@ from memory import memoryManager
 from quadruple import QuadrupleManager
 from virtual_machine import VirtualMachine
 import math
-
 status = True #used to run virtual machine when is not error flag
 
 #generates new function table
@@ -771,11 +770,11 @@ def p_function(p):
         #add return value to stack
         var  = getVariableFromFunction(functionId, 'global')
         temp = memoryManager.tempM.requestMemoryOfType(1, var.getType())
-        if var.getType == TYPES['int']:
+        if var.getType() == TYPES['int']:
             functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)
-        elif var.getType == TYPES['double']:
+        elif var.getType() == TYPES['double']:
             functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)
-        elif var.getType == TYPES['boolean']:
+        elif var.getType() == TYPES['boolean']:
             functionTable.getFunction(getLastFunction()).increaseBooleanTempMemoryRequired(1)
 
         generateRestoreMemoryQuadruple(functionId, temp)
@@ -1252,6 +1251,7 @@ def p_return_statute(p):
 #function statute
 def p_function_statute(p):
     '''function_statute :   ID id_used LPAREN function_called params RPAREN SEMICOLON'''
+    generateLoadMemoryQuadruple()
     generateGoSubQuadruple(p[1])
 #TODO check or delete to join with function called from expression
 
@@ -1390,15 +1390,15 @@ parser.defaulted_states = {};
 
 #test
 
-#file = open("parse_test_cycles.txt", "r")
-#file = open("parser_test_function.txt", "r")
-#file = open("parser_test_array.txt", "r")
-#file = open("parser_test.txt", "r")
-#file = open("parser_test_graphic.txt", "r")
 #file = open("parser_first_draw.txt", "r")
 #file = open("parser_input_test.txt", "r")
-#file = open("recursion_test.txt", "r")
 file = open("parser_sort_test.txt", "r")
+#file = open("parser_find_test.txt", "r")
+#file = open("parser_relational_test.txt", "r")
+#file = open("parser_factorial_r_test.txt", "r")
+#file = open("parser_factorial_c_test.txt", "r")
+#file = open("parser_fibonacci_r_test.txt", "r")
+#file = open("parser_fibonacci_c_test.txt", "r")
 #file = open("parser_function_test.txt", "r")
 #file = open("parser_general_test.txt", "r")
 parser.parse( file.read() )
@@ -1406,7 +1406,7 @@ parser.parse( file.read() )
 
 if status :
     #printSummary()
-    printQuadruples()
+    #printQuadruples()
     #printMemorySegmentMap()
 
     writeQuadruples()

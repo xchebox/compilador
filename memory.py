@@ -63,6 +63,7 @@ class MemoryManager:
 
     #sets the value into the memory space
     def writeOnMemory(self, memory, value):
+        memory = int(memory)
         if memory >= self.constIntI and memory < self.constIntF:
             #print "int constant"
             self.consM.writeOnMemory(memory, value, TYPES['int'])
@@ -92,6 +93,7 @@ class MemoryManager:
             self.globalM.writeOnMemory(memory, value, TYPES['boolean'])
         if memory >= self.localIntI and memory < self.localIntF:
             #print "int local"
+            #print value
             self.localM.writeOnMemory(memory, value, TYPES['int'])
         if memory >= self.localDoubleI and memory < self.localDoubleF:
             #print "double local"
@@ -102,6 +104,7 @@ class MemoryManager:
 
     #reads the value from the memory space
     def readFromMemory(self, memory):
+        memory = int(memory)
         if memory >= self.constIntI and memory < self.constIntF:
             #print "int constant"
             return self.consM.readFromMemory(memory, TYPES['int'])
@@ -130,6 +133,7 @@ class MemoryManager:
             #print "boolean global"
             return self.globalM.readFromMemory(memory, TYPES['boolean'])
         if memory >= self.localIntI and memory < self.localIntF:
+            #print memory >= self.localIntI and memory < self.localIntF
             #print "int local"
             return self.localM.readFromMemory(memory, TYPES['int'])
         if memory >= self.localDoubleI and memory < self.localDoubleF:

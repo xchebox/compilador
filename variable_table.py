@@ -13,8 +13,6 @@ class VarTable:
     def setVarType(self, var, var_type = None):
         self.table[var].setType(var_type)
 
-
-
     def getVariable(self, id):
         return self.table[id]
 

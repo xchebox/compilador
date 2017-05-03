@@ -11,7 +11,7 @@ class VirtualMachine:
         self.instructions = {}
         #program counter. To know current Quadruple
         self.pc = 0
-        self.tempMemory = MemoryManager()
+        self.tempMemory = None
         self.pointerStack = []
         self.memoryMap = {}
         self.mStack = [] #memory stack
@@ -206,7 +206,6 @@ class VirtualMachine:
                     second = self.readFromMemory(self.readFromMemory(instruction.secondOperand.split('&')[1]))
                 else :
                     second = self.readFromMemory(instruction.secondOperand)
-
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
 
@@ -367,6 +366,8 @@ class VirtualMachine:
                     return 'Error, variable used but not assigned'
 
                 self.writeOnNewMemory(instruction.result, first)
+                #print self.tempMemory.readFromMemory(instruction.result)
+                #print self.tempMemory.localIntF
 
             elif instruction.operator == operators['verify']:
                 if self.isPointer(instruction.firstOperand): #contains array memory

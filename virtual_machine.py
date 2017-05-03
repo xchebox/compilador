@@ -34,7 +34,7 @@ class VirtualMachine:
         memory = int(memory)
         if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             gMemory.writeOnMemory(memory, value)
-        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory 
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory
             gMemory.writeOnMemory(memory, value)
         else:
             self.mStack[len(self.mStack) - 1].writeOnMemory(memory, value)
@@ -157,7 +157,7 @@ class VirtualMachine:
 
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
-                if isinstance(first, int) or isinstance(double, int):
+                if isinstance(first, int) or isinstance(float, int):
                     first = int(first)
                     second = int(second)
                 self.writeOnMemory(instruction.result,first + second)
@@ -175,7 +175,7 @@ class VirtualMachine:
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
 
-                if isinstance(first, int) or isinstance(double, int):
+                if isinstance(first, int) or isinstance(float, int):
                     first = int(first)
                     second = int(second)
 

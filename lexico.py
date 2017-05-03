@@ -35,6 +35,8 @@ reserved = {
     'moveForward'       : 'MOVEFORWARD',
     'print'             : 'PRINT',
     'input'             : 'INPUT',
+    'carpet'            : 'CARPET',
+
 }
 
 tokens = [

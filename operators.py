@@ -34,6 +34,8 @@ operators = {
     'print'         : 32,
     'loadMemory'    : 33,
     'restoreMemory' : 34,
-    'input'         : 35
+    'input'         : 35,
+    'beginFill'     : 36,
+    'endFill'       : 37
 
 }

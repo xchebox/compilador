@@ -539,6 +539,12 @@ class VirtualMachine:
 
                 self.turtle.right(first)
 
+            elif instruction.operator == operators['beginFill']:
+                self.turtle.begin_fill()
+
+            elif instruction.operator == operators['endFill']:
+                self.turtle.end_fill()
+
             elif instruction.operator == operators['circle']:
                 if self.isPointer(instruction.firstOperand): #contains array memory
                     first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
@@ -570,6 +576,6 @@ class VirtualMachine:
 
             self.pc += 1
 
-        #self.turtle.getscreen().getcanvas().postscript(file="drawing.eps")
+        self.turtle.getscreen().getcanvas().postscript(file="drawing.eps")
 
         return 'Process completed successfully'

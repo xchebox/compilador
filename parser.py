@@ -695,7 +695,7 @@ def p_array_used(p):# only called first time you use first dimension
             operatorsStack.append(FALSE_BOTTOM)
             if onGlobalScope():
                 if not varExistsOnFunction(varName, 'global'):
-                    error("var %s is not declared "%(varName), p.lineno(-1))
+                    error("var %s has not been declared "%(varName), p.lineno(-1))
                 var = getVariableFromFunction(p[-2], 'global')
                 if len(var.getDimension()) <= 0:
                     error("var %s is not an array, on line "%(varName), p.lineno(-1))
@@ -1184,7 +1184,7 @@ def p_if_statute(p):
 def p_then(p):
     'then :          '
     if typesStack.pop() != TYPES['boolean']:
-        error('Semantic error in if statute on line ', p.lineno(0))
+        error('If must have an boolean as expression on line ', p.lineno(0))
     else:
         #actual boolean expression
         generateGotoFQuadruple()
@@ -1218,7 +1218,7 @@ def p_when_declared(p):
 def p_while_then(p):
     'while_then :            '
     if typesStack.pop() != TYPES['boolean']:
-        error('Semantic error on while statute on line ',p.lineno(0))
+        error('While must have an boolean on line ',p.lineno(0))
     else :
         generateGotoFQuadruple()
 
@@ -1267,7 +1267,7 @@ def p_input_statute(p):
     '''input_statute : INPUT LPAREN ID RPAREN SEMICOLON  '''
     quad = generateInputQuadruple(p[3])
     if  quad == -1:
-        error("Input need a not array variable")
+        error("Input needs a regular variable, not an array")
     if quad == -2 :
         error("var does not exist")
 

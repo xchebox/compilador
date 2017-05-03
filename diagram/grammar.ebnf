@@ -25,6 +25,9 @@ ROTATETOLEFT        ::= 'rotateToLeft'
 RECTANGLE           ::= 'rectangle'
 TRIANGLE            ::= 'triangle'
 CIRCLE              ::= 'circle'
+MOVEFORWARD		      ::= 'moveForward'
+PRINT 			        ::= 'print'
+INPUT 			        ::= 'input'
 
 
 /*tokens*/
@@ -126,6 +129,8 @@ statute                 ::= (if_statute statute) |
                             (do_while_statute statute) |
                             (assignation_statute statute) |
                             (declaration_statute statute) |
+                            (print_statute statute)|
+                            (input_statute statute)|
                             (function_statute statute) |
                             (comment_statute statute) |
                             (graphic_statute statute) |
@@ -138,6 +143,13 @@ else                    ::= (ELSE LBRACE statute RBRACE) |
 
 /*function*/
 function_statute        ::= ID LPAREN params RPAREN SEMICOLON
+
+
+/*Input*/
+input_statute           ::=INPUT LPAREN ID RPAREN SEMICOLON
+
+/*Print*/
+print_statute           ::=PRINT LPAREN expression RPAREN SEMICOLON
 
 /* while */
 while_statute           ::= WHILE LPAREN expression RPAREN LBRACE statute RBRACE
@@ -184,6 +196,7 @@ set_y_statute                 ::= SETY LPAREN expression RPAREN SEMICOLON
 clear_statute                 ::= CLEAR LPAREN RPAREN SEMICOLON
 move_on_x_statute             ::= MOVEONX LPAREN expression RPAREN SEMICOLON
 move_on_y_statute             ::= MOVEONY LPAREN expression RPAREN SEMICOLON
+move_forward_statute          ::= MOVEFORWARD LPAREN expression RPAREN SEMICOLON
 rotate_to_right_statute       ::= ROTATETORIGHT LPAREN expression RPAREN SEMICOLON
 rotate_to_left_statute        ::= ROTATETOLEFT LPAREN expression RPAREN SEMICOLON
 rectangle_statute             ::= RECTANGLE LPAREN expression COMMA expression RPAREN SEMICOLON LPAREN expression RPAREN SEMICOLON

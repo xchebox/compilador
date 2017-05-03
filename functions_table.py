@@ -31,9 +31,9 @@ class Function():
         self.doubleLocalMemoryRequired = 0
         self.booleanLocalMemoryRequired = 0
 
-        self.intConstMemoryRequired = 0
-        self.doubleConstMemoryRequired = 0
-        self.booleanConstMemoryRequired = 0
+        #self.intConstMemoryRequired = 0
+        #self.doubleConstMemoryRequired = 0
+        #self.booleanConstMemoryRequired = 0
 
         self.intTempMemoryRequired = 0
         self.doubleTempMemoryRequired = 0
@@ -78,14 +78,14 @@ class Function():
     def getBooleanLocalMemoryRequired(self):
         return self.booleanLocalMemoryRequired
 
-    def getIntConstMemoryRequired(self):
-        return self.intConstMemoryRequired
+    #def getIntConstMemoryRequired(self):
+    #    return self.intConstMemoryRequired
 
-    def getDoubleConstMemoryRequired(self):
-        return self.doubleConstMemoryRequired
+    #def getDoubleConstMemoryRequired(self):
+    #    return self.doubleConstMemoryRequired
 
-    def getBooleanConstMemoryRequired(self):
-        return self.booleanConstMemoryRequired
+    #def getBooleanConstMemoryRequired(self):
+    #    return self.booleanConstMemoryRequired
 
     def getIntTempMemoryRequired(self):
         return self.intTempMemoryRequired
@@ -105,14 +105,14 @@ class Function():
     def increaseDoubleLocalMemoryRequired(self, amountToIncrement):
         self.doubleLocalMemoryRequired += amountToIncrement
 
-    def increaseIntConstMemoryRequired(self, amountToIncrement):
-        self.intConstMemoryRequired += amountToIncrement
+    #def increaseIntConstMemoryRequired(self, amountToIncrement):
+    #    self.intConstMemoryRequired += amountToIncrement
 
-    def increaseBooleanConstMemoryRequired(self, amountToIncrement):
-        self.booleanConstMemoryRequired += amountToIncrement
+    #def increaseBooleanConstMemoryRequired(self, amountToIncrement):
+    #    self.booleanConstMemoryRequired += amountToIncrement
 
-    def increaseDoubleConstMemoryRequired(self, amountToIncrement):
-        self.doubleConstMemoryRequired += amountToIncrement
+    #def increaseDoubleConstMemoryRequired(self, amountToIncrement):
+    #    self.doubleConstMemoryRequired += amountToIncrement
 
     def increaseIntTempMemoryRequired(self, amountToIncrement):
         self.intTempMemoryRequired += amountToIncrement

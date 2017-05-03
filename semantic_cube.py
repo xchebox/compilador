@@ -67,7 +67,7 @@ semantic_cube[TYPES['boolean']][operators['==']][TYPES['boolean']]        = -1
 semantic_cube[TYPES['int']][operators['=']][TYPES['int']]                = TYPES['int']
 semantic_cube[TYPES['int']][operators['=']][TYPES['double']]             = TYPES['int']
 semantic_cube[TYPES['int']][operators['=']][TYPES['boolean']]            = -1
-semantic_cube[TYPES['double']][operators['=']][TYPES['int']]             = TYPES['int']
+semantic_cube[TYPES['double']][operators['=']][TYPES['int']]             = TYPES['double']
 semantic_cube[TYPES['double']][operators['=']][TYPES['double']]          = TYPES['double']
 semantic_cube[TYPES['double']][operators['=']][TYPES['boolean']]         = -1
 semantic_cube[TYPES['boolean']][operators['=']][TYPES['int']]            = -1

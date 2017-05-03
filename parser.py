@@ -9,7 +9,6 @@ from memory import memoryManager
 from quadruple import QuadrupleManager
 from virtual_machine import VirtualMachine
 import math
-
 status = True #used to run virtual machine when is not error flag
 
 #generates new function table
@@ -36,8 +35,6 @@ def printSummary():
         print('%s ints\n%s doubles\n%s booleans\n'%(functionTable.getFunctionTable()[f].getIntLocalMemoryRequired(), functionTable.getFunctionTable()[f].getDoubleLocalMemoryRequired(), functionTable.getFunctionTable()[f].getBooleanLocalMemoryRequired()))
         print('temp :\n')
         print('%s ints\n%s doubles\n%s booleans\n'%(functionTable.getFunctionTable()[f].getIntTempMemoryRequired(), functionTable.getFunctionTable()[f].getDoubleTempMemoryRequired(), functionTable.getFunctionTable()[f].getBooleanTempMemoryRequired()))
-        print('const :\n')
-        print('%s ints\n%s doubles\n%s booleans\n'%(functionTable.getFunctionTable()[f].getIntConstMemoryRequired(), functionTable.getFunctionTable()[f].getDoubleConstMemoryRequired(), functionTable.getFunctionTable()[f].getBooleanConstMemoryRequired()))
         print ("the variables are :")
         print('\n')
         for v in functionTable.getFunctionTable()[f].getVarTable().table:
@@ -77,12 +74,12 @@ def printMemorySegmentMap():
     for k in functionTable.table:# iterates over function table
         if k != 'global':
             f = functionTable.table[k]
-            print '%s.%s,%s,%s,%s,%s,%s,%s,%s,%s'%(k, f.getIntLocalMemoryRequired(),
+            print '%s.%s,%s,%s,%s,%s,%s'%(k, f.getIntLocalMemoryRequired(),
             f.getDoubleLocalMemoryRequired(),
             f.getBooleanLocalMemoryRequired(),
-            f.getIntConstMemoryRequired(),
-            f.getDoubleConstMemoryRequired(),
-            f.getBooleanConstMemoryRequired(),
+            #f.getIntConstMemoryRequired(),
+            #f.getDoubleConstMemoryRequired(),
+            #f.getBooleanConstMemoryRequired(),
             f.getIntTempMemoryRequired(),
             f.getDoubleTempMemoryRequired(),
             f.getBooleanTempMemoryRequired())
@@ -92,12 +89,12 @@ def writeMemorySegmentMap():
     for k in functionTable.table:# iterates over function table
         if k != 'global':
             f = functionTable.table[k]
-            s += '%s.%s,%s,%s,%s,%s,%s,%s,%s,%s.'%(k, f.getIntLocalMemoryRequired(),
+            s += '%s.%s,%s,%s,%s,%s,%s.'%(k, f.getIntLocalMemoryRequired(),
             f.getDoubleLocalMemoryRequired(),
             f.getBooleanLocalMemoryRequired(),
-            f.getIntConstMemoryRequired(),
-            f.getDoubleConstMemoryRequired(),
-            f.getBooleanConstMemoryRequired(),
+            #f.getIntConstMemoryRequired(),
+            #f.getDoubleConstMemoryRequired(),
+            #f.getBooleanConstMemoryRequired(),
             f.getIntTempMemoryRequired(),
             f.getDoubleTempMemoryRequired(),
             f.getBooleanTempMemoryRequired())
@@ -134,7 +131,7 @@ def getVariableFromFunction(variable, function):
     return functionTable.getFunction(function).getVariable(variable)
 
 def generateGoToMain():
-    quadrupleManager.addQuadruple(operators['goto'], ' ', ' ', JUMP_SPACE)#TODO decide what to do with goto operator code
+    quadrupleManager.addQuadruple(operators['goto'], ' ', ' ', JUMP_SPACE)
 
 #used to generates quadruple. A common function used by the different operators
 def generateOperatorNextQuadruple(operator):
@@ -230,24 +227,24 @@ def generateAsignationNextQuadruple(var, varType, id):
 
 #generates gotof quadruple
 def generateGotoFQuadruple():
-    quadrupleManager.addQuadruple(operators['gotoF'], operandsStack.pop(), ' ', JUMP_SPACE)#TODO decide what to do with goto operator code
+    quadrupleManager.addQuadruple(operators['gotoF'], operandsStack.pop(), ' ', JUMP_SPACE)
     jumpStack.append(quadrupleManager.getCounter() - 1)#adds position to jumpStack
 
 #generates goto quadruple
 def generateGotoQuadruple():
-    quadrupleManager.addQuadruple(operators['goto'], ' ', ' ', JUMP_SPACE)#TODO decide what to do with goto operator code
+    quadrupleManager.addQuadruple(operators['goto'], ' ', ' ', JUMP_SPACE)
     quadrupleManager.fillQuadrupleJump(jumpStack.pop(), quadrupleManager.getCounter())
     jumpStack.append(quadrupleManager.getCounter() - 1)#adds position to jumpStack
 
 #generates goto while quadruple
 def generateWhileGotoQuadruple():
     jumptToFalse = jumpStack.pop()
-    quadrupleManager.addQuadruple(operators['goto'], ' ', ' ', jumpStack.pop())#TODO decide what to do with goto operator code
+    quadrupleManager.addQuadruple(operators['goto'], ' ', ' ', jumpStack.pop())
     quadrupleManager.fillQuadrupleJump(jumptToFalse, quadrupleManager.getCounter())
 
 #generates gotoT while quadruple
 def generateDoWhileGotoTQuadruple():
-    quadrupleManager.addQuadruple(operators['gotoT'], operandsStack.pop(), ' ', jumpStack.pop())#TODO decide what to do with goto operator code
+    quadrupleManager.addQuadruple(operators['gotoT'], operandsStack.pop(), ' ', jumpStack.pop())
 
 #function to generate a new return quadruple
 def generateReturnQuadruple(returnValue):
@@ -276,52 +273,52 @@ def generateParamQuadruple(function, k):
     if typesStack.pop() != var.getType():
         return 0
     else:
-        quadrupleManager.addQuadruple(operators['param'], operandsStack.pop(), ' ', var.getMemory())#TODO replace for memory - done
+        quadrupleManager.addQuadruple(operators['param'], operandsStack.pop(), ' ', var.getMemory())
         return 1
 
 #function to generate ver on dimension check
 def generateVerifyQuadruple(dimension):
     resultType = semantic_cube[getLastType()][operators['verify']][TYPES['int']]
-    if resultType == -1: #TODO add checks to boolena in if and while on decide to use int and doubles as booleans
+    if resultType == -1:
         return -1
     quadrupleManager.addQuadruple(operators['verify'], getLastOperand(), dimension, ' ')
     return 1
 
 def generateAuxArrayFunction(mDimension):
     temp = memoryManager.tempM.requestIntMemory(1)
-    quadrupleManager.addQuadruple(operators['*'], operandsStack.pop(), "*%s"%mDimension, temp)#TODO check when to delete temps and change mDimension for memory
+    quadrupleManager.addQuadruple(operators['*'], operandsStack.pop(), "*%s"%mDimension, temp)
     operandsStack.append(temp)
     if onGlobalScope():
-        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction('global').increaseIntTempMemoryRequired(1)#result always increments one by one
     else :
-        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)#result always increments one by one
 
 def generateSumDimensionFunction():
     temp = memoryManager.tempM.requestIntMemory(1)
     quadrupleManager.addQuadruple(operators['+'], operandsStack.pop(), operandsStack.pop(), temp)
     operandsStack.append(temp)
     if onGlobalScope():
-        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction('global').increaseIntTempMemoryRequired(1)#result always increments one by one
     else :
-        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)#result always increments one by one
 
 def generateSumAllDimensionsQuadruple():
     temp = memoryManager.tempM.requestIntMemory(1)
     quadrupleManager.addQuadruple(operators['+'], operandsStack.pop(), operandsStack.pop(), temp)
     operandsStack.append(temp)
     if onGlobalScope():
-        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction('global').increaseIntTempMemoryRequired(1)#result always increments one by one
     else :
-        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)#result always increments one by one
 
 def generateAddBaseMemoryQuadruple(baseMemory):
     temp = memoryManager.tempM.requestIntMemory(1)
     quadrupleManager.addQuadruple(operators['+'], operandsStack.pop(), "*%s"%baseMemory, temp)
     operandsStack.append(temp)
     if onGlobalScope():
-        functionTable.getFunction('global').increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction('global').increaseIntTempMemoryRequired(1)#result always increments one by one
     else :
-        functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)#result always increments one by one
+        functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)#result always increments one by one
 
 def generateAsignationArrayQuadruple(varMemory, varType, id):
     resultType = semantic_cube[typesStack.pop()][operators['=']][varType]
@@ -403,7 +400,7 @@ def generateRotateToLeftQuadruple():
     quadrupleManager.addQuadruple(operators['rotateLeft'],operandsStack.pop(),' ',' ')
     return 0
 
-def generateRectangleQuadruple():#TODO implements these three down
+def generateRectangleQuadruple():
     if typesStack.pop() != TYPES['int'] or typesStack.pop() != TYPES['int']:
         return -1
 
@@ -411,8 +408,8 @@ def generateRectangleQuadruple():#TODO implements these three down
     width = operandsStack.pop()
 
     temp = memoryManager.consM.requestIntMemory(1)
-    memoryManager.consM.writeOnMemory(temp, 90, TYPES['int']) #TODO remove this to manage constants
-    functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
+    memoryManager.consM.writeOnMemory(temp, 90, TYPES['int'])
+    #functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
 
     quadrupleManager.addQuadruple(operators['moveForward'], width,' ',' ')
 
@@ -445,8 +442,8 @@ def generateTriangleQuadruple():
     size = operandsStack.pop()
 
     temp = memoryManager.consM.requestIntMemory(1)
-    memoryManager.consM.writeOnMemory(temp, 120, TYPES['int']) #TODO remove this to manage constants
-    functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
+    memoryManager.consM.writeOnMemory(temp, 120, TYPES['int'])
+    #functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
 
     quadrupleManager.addQuadruple(operators['moveForward'], size,' ',' ')
 
@@ -471,6 +468,25 @@ def generateCircleQuadruple():
         return -1
     quadrupleManager.addQuadruple(operators['circle'],operandsStack.pop(),' ',' ')
     return 0
+
+def generateInputQuadruple(varId):
+    if onGlobalScope():
+        if not varExistsOnFunction(varId, 'global'):
+            return -2
+        var = getVariableFromFunction(varId, 'global')
+    else :
+        if not varExistsOnFunction(varId, getLastFunction()):
+            if not varExistsOnFunction(varId, 'global'):
+                return -2
+            else :
+                var = getVariableFromFunction(varId, 'global')
+        else :
+            var = getVariableFromFunction(varId, getLastFunction())
+    if len(var.getDimension()) > 0:
+        return -1
+    quadrupleManager.addQuadruple(operators['input'],' ',' ',var.getMemory())
+    return 0
+
 
 # Get the token map from the lexer.  This is required.
 from lexico import tokens
@@ -519,21 +535,19 @@ def p_declaration_statute(p):
 
 
 #int declaration
-def p_int_declaration(p):#TODO check if add memory counter to global and main
+def p_int_declaration(p):
     'int_declaration :   variable_declared array'
     if onGlobalScope() :
         g = functionTable.getFunction('global')
         getLastVariableDeclaredFromFunction('global').setType(TYPES['int']) #type added
         size = getLastVariableDeclaredFromFunction('global').getTotalMemoryDimension()
         getLastVariableDeclaredFromFunction('global').setMemory(memoryManager.globalM.requestIntMemory(size))
-        #getLastVariableDeclaredFromFunction('global').setMemory(g.getIntMemoryRequired())TODO delete this
         g.increaseIntLocalMemoryRequired(size)
     else :
         lastFunction = functionTable.getFunction(getLastFunction())
         getLastVariableDeclaredFromLastFunction().setType(TYPES['int']) #type added
         size = getLastVariableDeclaredFromLastFunction().getTotalMemoryDimension()
         getLastVariableDeclaredFromLastFunction().setMemory(memoryManager.localM.requestIntMemory(size))
-        #getLastVariableDeclaredFromLastFunction().setMemory(lastFunction.getIntMemoryRequired())TODO delete this
         lastFunction.increaseIntLocalMemoryRequired(size)
 
 
@@ -626,7 +640,7 @@ def p_array_u(p):
         if lookDimensionStack()[varId] > 1:
             generateSumAllDimensionsQuadruple()
 
-        generateAddBaseMemoryQuadruple(var.getMemory()) #add base to index TODO to differentiate from memory
+        generateAddBaseMemoryQuadruple(var.getMemory()) #add base to index
         operatorsStack.pop() # clear false bottom
         dimensionStack.pop() #removes dimension
 
@@ -678,7 +692,7 @@ def p_array_used(p):# only called first time you use first dimension
             operatorsStack.append(FALSE_BOTTOM)
             if onGlobalScope():
                 if not varExistsOnFunction(varName, 'global'):
-                    error("var %s is not declared "%(varName), p.lineno(-1))
+                    error("var %s has not been declared "%(varName), p.lineno(-1))
                 var = getVariableFromFunction(p[-2], 'global')
                 if len(var.getDimension()) <= 0:
                     error("var %s is not an array, on line "%(varName), p.lineno(-1))
@@ -688,7 +702,7 @@ def p_array_used(p):# only called first time you use first dimension
                 if not varExistsOnFunction(varName, getLastFunction()):# var not declared on local
                     if not varExistsOnFunction(varName, 'global'): #var not declared on global
                         error('var '+varName+' not defined on line', p.lineno(-1))
-                    else : #var on global #TODO change pop on term id
+                    else : #var on global
                         var = getVariableFromFunction(varName, 'global')
                         if len(var.getDimension()) <= 0:
                             error("var %s is not an array, on line "%(varName), p.lineno(-1))
@@ -722,7 +736,7 @@ def p_array_dimension_used(p):
 
 
     dimension = var.getDimension()[lookDimensionStack()[varId]]
-    if generateVerifyQuadruple(dimension.size) == -1:# TODO check if verify uses memory
+    if generateVerifyQuadruple(dimension.size) == -1:
         error("arrays must be accessed by an int, %s given in var %s, on line "%(TYPES.keys()[TYPES.values().index(getLastType())], varId), p.lineno(-1))
 
     #verify quadruple generated
@@ -754,11 +768,11 @@ def p_function(p):
         #add return value to stack
         var  = getVariableFromFunction(functionId, 'global')
         temp = memoryManager.tempM.requestMemoryOfType(1, var.getType())
-        if var.getType == TYPES['int']:
+        if var.getType() == TYPES['int']:
             functionTable.getFunction(getLastFunction()).increaseIntTempMemoryRequired(1)
-        elif var.getType == TYPES['double']:
+        elif var.getType() == TYPES['double']:
             functionTable.getFunction(getLastFunction()).increaseDoubleTempMemoryRequired(1)
-        elif var.getType == TYPES['boolean']:
+        elif var.getType() == TYPES['boolean']:
             functionTable.getFunction(getLastFunction()).increaseBooleanTempMemoryRequired(1)
 
         generateRestoreMemoryQuadruple(functionId, temp)
@@ -801,7 +815,7 @@ def p_param_passed(p):
         error('function %s needs %s elements, %s given, on line '%(functionId, paramsNo, lookParamStack()[functionId]),p.lineno(0))
     else:
         if generateParamQuadruple(functionId, lookParamStack()[functionId])  == 0: #Quadruple generated
-            error('Type mismatch on line ', p.lineno(0))#//TODO add error message on type
+            error('Type mismatch on line ', p.lineno(0))
 
 
 
@@ -825,7 +839,6 @@ def p_int_assignation(p):
         if onGlobalScope():
             if generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global'), TYPES['int'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
-            #TODO change into memory using globla or local scope
         else :
             if generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction(), TYPES['int'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
@@ -838,7 +851,6 @@ def p_double_assignation(p):
         if onGlobalScope():
             if generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global'), TYPES['double'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
-            #TODO change into memory using globla or local scope
         else :
             if generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction(), TYPES['double'], getLastVariable()) == 0:
                 error("Type mismatch on line", p.lineno(1))
@@ -851,7 +863,6 @@ def p_boolean_assignation(p):
     if p[1] == '=':
         if onGlobalScope():
             generateAsignationNextQuadruple(getVariableFromFunction(getLastVariable(), 'global'), TYPES['boolean'], getLastVariable())
-            #TODO change into memory using globla or local scope
         else :
             generateAsignationNextQuadruple(getLastVariableDeclaredFromLastFunction(), TYPES['boolean'], getLastVariable())
 
@@ -905,8 +916,6 @@ def p_expression(p):
 #used to clear the stack. In theory before a new expression is called the older values are useless
 def p_clean_expressions(p):
     'clean_expressions :        '
-    #del operandsStack[:]#TODO handle this. Is basic just for the return statement
-    #del typesStack[:]
 
 #logic
 def p_logical(p):
@@ -1002,7 +1011,7 @@ def p_term(p):
                     | ID id_used function
                     | LPAREN term_parenthesis_used logical RPAREN'''
     #remove false bottom
-    if p[1] == '(': #TODO check if works properly.... it seems so
+    if p[1] == '(':
         operatorsStack.pop()
 
 def p_id_used(p):
@@ -1014,38 +1023,36 @@ def p_term_int_used(p):
     'term_int_used :     '
     #constants have  size 1
     const = memoryManager.consM.requestIntMemory(1)
-    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['int']) #TODO remove this to manage constants
+    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['int'])
     operandsStack.append(const)
     #type added to stack
     typesStack.append(TYPES['int'])
-    if not onGlobalScope():# increase constant memory required
-        functionTable.getFunction(getLastFunction()).increaseIntConstMemoryRequired(1)
 
 #rule to identify the used type
 def p_term_double_used(p):
     'term_double_used :     '
     #constants have  size 1
     const = memoryManager.consM.requestDoubleMemory(1)
-    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['double'])#TODO remove this to manage constants
+    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['double'])
     operandsStack.append(const)
 
     #type added to stack
     typesStack.append(TYPES['double'])
-    if not onGlobalScope():# increase constant memory required
-        functionTable.getFunction(getLastFunction()).increaseDoubleConstMemoryRequired(1)
+    #if not onGlobalScope():# increase constant memory required
+    #    functionTable.getFunction(getLastFunction()).increaseDoubleConstMemoryRequired(1)
 
 #rule to identify the used type
 def p_term_boolean_used(p):
     'term_boolean_used :     '
     #constants have  size 1
     const = memoryManager.consM.requestBooleanMemory(1)
-    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['boolean'])#TODO remove this to manage constants
+    memoryManager.consM.writeOnMemory(const, p[-1], TYPES['boolean'])
     operandsStack.append(const)
 
     #type added to stack
     typesStack.append(TYPES['boolean'])
-    if not onGlobalScope():# increase constant memory required
-        functionTable.getFunction(getLastFunction()).increaseBooleanConstMemoryRequired(1)
+    #if not onGlobalScope():# increase constant memory required
+        #functionTable.getFunction(getLastFunction()).increaseBooleanConstMemoryRequired(1)
 
 #rule to identify a use of parenthesis
 def p_term_parenthesis_used(p):
@@ -1143,13 +1150,6 @@ def p_mult_params_declaration(p):
                                     | empty'''
 
 
-#different types
-def p_type(p):##############################delete this
-    '''type :     DOUBLE
-                | INT
-                | BOOLEAN'''
-
-
 #statute
 def p_statute(p):
     '''statute :      if_statute statute
@@ -1161,6 +1161,7 @@ def p_statute(p):
                     | comment_statute statute
                     | print_statute statute
                     | graphic_statute statute
+                    | input_statute statute
                     | empty'''
 
 #if
@@ -1173,7 +1174,7 @@ def p_if_statute(p):
 def p_then(p):
     'then :          '
     if typesStack.pop() != TYPES['boolean']:
-        error('Semantic error in if statute on line ', p.lineno(0))
+        error('If must have an boolean as expression on line ', p.lineno(0))
     else:
         #actual boolean expression
         generateGotoFQuadruple()
@@ -1207,7 +1208,7 @@ def p_when_declared(p):
 def p_while_then(p):
     'while_then :            '
     if typesStack.pop() != TYPES['boolean']:
-        error('Semantic error on while statute on line ',p.lineno(0))
+        error('While must have an boolean on line ',p.lineno(0))
     else :
         generateGotoFQuadruple()
 
@@ -1227,7 +1228,6 @@ def p_do_while_then(p):
 #return statement
 def p_return_statute(p):
     '''return_statute :   RETURN expression SEMICOLON'''
-    #typesStack.pop() TODO dont remember why pop i think i already solved
 
     rType = functionTable.getFunction(getLastFunction()).getReturnType()
     typeGiven = typesStack.pop()
@@ -1241,16 +1241,24 @@ def p_return_statute(p):
 #function statute
 def p_function_statute(p):
     '''function_statute :   ID id_used LPAREN function_called params RPAREN SEMICOLON'''
+    generateLoadMemoryQuadruple()
     generateGoSubQuadruple(p[1])
-#TODO check or delete to join with function called from expression
 
 #comment statute
 def p_comment_statute(p):
-    '''comment_statute :    COMMENT statute'''
+    '''comment_statute :    COMMENT'''
 
 def p_print_statute(p):
     '''print_statute : PRINT LPAREN expression RPAREN SEMICOLON  '''
     generatePrintQuadruple()
+
+def p_input_statute(p):
+    '''input_statute : INPUT LPAREN ID RPAREN SEMICOLON  '''
+    quad = generateInputQuadruple(p[3])
+    if  quad == -1:
+        error("Input needs a regular variable, not an array")
+    if quad == -2 :
+        error("var does not exist")
 
 
 #turtle graphics statutes
@@ -1371,15 +1379,19 @@ parser.defaulted_states = {};
 
 #test
 
-#file = open("parse_test_cycles.txt", "r")
-#file = open("parser_test_function.txt", "r")
-#file = open("parser_test_array.txt", "r")
-#file = open("parser_test.txt", "r")
-#file = open("parser_test_graphic.txt", "r")
-#file = open("first_draw.txt", "r")
-#file = open("recursion_test.txt", "r")
-file = open("parser_sort_test.txt", "r")
-#file = open("parser_function_test.txt", "r")
+filename = raw_input("input filename with extension:\n")
+
+#file = open("parser_first_draw.txt", "r")
+#file = open("parser_input_test.txt", "r")
+#file = open("parser_sort_test.txt", "r")
+#file = open("parser_find_test.txt", "r")
+#file = open("parser_relational_test.txt", "r")
+#file = open("parser_factorial_r_test.txt", "r")
+#file = open("parser_factorial_c_test.txt", "r")
+#file = open("parser_fibonacci_r_test.txt", "r")
+#file = open("parser_fibonacci_c_test.txt", "r")
+#file = open("parser_general_test.txt", "r")
+file = open(filename, "r")
 parser.parse( file.read() )
 
 

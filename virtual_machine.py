@@ -1,7 +1,7 @@
 #from memory import MemoryManager
 from quadruple import Quadruple
 from operators import operators
-from memory import memoryManager as gMemory, MemoryManager
+from memory import memoryManager as gMemory, MemoryManager, MemoryCounter
 import turtle
 
 class VirtualMachine:
@@ -11,52 +11,88 @@ class VirtualMachine:
         self.instructions = {}
         #program counter. To know current Quadruple
         self.pc = 0
-        self.tempMemory = MemoryManager()
+        self.tempMemory = None
         self.pointerStack = []
         self.memoryMap = {}
         self.mStack = [] #memory stack
         self.turtle = turtle.Turtle()
+        self.screen = None
+        self.counter = MemoryCounter()
 
 
     def readFromMemory(self, memory):
         #print memory
         memory = int(memory)
-        if memory >= 5000 and memory < 9000: #global memory
+        if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             return gMemory.readFromMemory(memory)
-        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory
             return gMemory.readFromMemory(memory)
         else :
             return self.mStack[len(self.mStack) - 1].readFromMemory(memory)
 
     def writeOnMemory(self, memory, value):
         memory = int(memory)
-        if memory >= 5000 and memory < 9000: #global memory
+        if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             gMemory.writeOnMemory(memory, value)
-        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory
             gMemory.writeOnMemory(memory, value)
         else:
             self.mStack[len(self.mStack) - 1].writeOnMemory(memory, value)
 
     def writeOnPreviousMemory(self, memory, value):
         memory = int(memory)
-        if memory >= 5000 and memory < 9000: #global memory
+        if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             gMemory.writeOnMemory(memory, value)
-        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory
             gMemory.writeOnMemory(memory, value)
         else:
             self.mStack[len(self.mStack) - 2].writeOnMemory(memory, value)
 
     def writeOnNewMemory(self, memory, value):
         memory = int(memory)
-        if memory >= 5000 and memory < 9000: #global memory
+        if memory >= gMemory.globalIntI and memory < gMemory.globalBooleanF: #global memory
             gMemory.writeOnMemory(memory, value)
-        elif memory >= 0 and memory < 2000: #constant memory TODO delete this to manage constants
+        elif memory >= gMemory.constIntI and memory < gMemory.constBooleanF: #constant memory
             gMemory.writeOnMemory(memory, value)
         else:
             self.tempMemory.writeOnMemory(memory, value)
 
+    def isInteger(self, memory):
+        memory = int(memory)
+        return (memory >= gMemory.globalIntI and memory < gMemory.globalIntF) or (memory >= gMemory.constIntI and memory < gMemory.constIntF) or (memory >= gMemory.tempIntI and memory < gMemory.tempIntF) or (memory >= gMemory.localIntI and memory < gMemory.localIntF)
+
     def requestMemory(self, functionName):
-        self.tempMemory = MemoryManager()
+        neccesaryMemory = self.memoryMap[functionName]
+        self.tempMemory = MemoryManager(
+        int(neccesaryMemory[3]),
+        int(neccesaryMemory[4]),
+        int(neccesaryMemory[5]),
+        int(neccesaryMemory[0]),
+        int(neccesaryMemory[1]),
+        int(neccesaryMemory[2]),
+        self.counter.tempInt,
+        self.counter.tempDouble,
+        self.counter.tempBoolean,
+        self.counter.localInt,
+        self.counter.localDouble,
+        self.counter.localBoolean)
+        #memory added to counter
+        self.counter.tempInt += int(neccesaryMemory[3])
+        self.counter.tempDouble += int(neccesaryMemory[4])
+        self.counter.tempBoolean += int(neccesaryMemory[5])
+        self.counter.localInt += int(neccesaryMemory[0])
+        self.counter.localDouble += int(neccesaryMemory[1])
+        self.counter.localBoolean += int(neccesaryMemory[2])
+
+    def releaseMemory(self):
+        m = self.mStack[len(self.mStack) - 1]
+        self.counter.tempInt -= int(m.intTempOff)
+        self.counter.tempDouble -= int(m.doubleTempOff)
+        self.counter.tempBoolean -= int(m.booleanTempOff)
+        self.counter.localInt -= int(m.intLocalOff)
+        self.counter.localDouble -= int(m.doubleLocalOff)
+        self.counter.localBoolean -= int(m.booleanLocalOff)
+        self.mStack.pop()
 
     def loadMemory(self):
         self.mStack.append(self.tempMemory)
@@ -68,11 +104,11 @@ class VirtualMachine:
         return operand[0] == '*'
 
     def initScreen(self):
-        screen = turtle.Screen()
-        screen.title('Code To Paint')
-        screen.colormode(255)
-        screen.delay(10)
-        screen_x, screen_y = screen.screensize()
+        self.screen = turtle.Screen()
+        self.screen.title('Code To Paint')
+        self.screen.colormode(255)
+        self.screen.delay(10)
+        screen_x, screen_y = self.screen.screensize()
 
     def loadProgram(self):
         file = open("./out/quadruple.cp", "r")
@@ -121,6 +157,9 @@ class VirtualMachine:
 
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
+                if isinstance(first, int) or isinstance(float, int):
+                    first = int(first)
+                    second = int(second)
                 self.writeOnMemory(instruction.result,first + second)
 
             elif instruction.operator == operators['-']:
@@ -135,6 +174,10 @@ class VirtualMachine:
 
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
+
+                if isinstance(first, int) or isinstance(float, int):
+                    first = int(first)
+                    second = int(second)
 
                 self.writeOnMemory(instruction.result, first - second)
 
@@ -187,7 +230,6 @@ class VirtualMachine:
                     second = self.readFromMemory(self.readFromMemory(instruction.secondOperand.split('&')[1]))
                 else :
                     second = self.readFromMemory(instruction.secondOperand)
-
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
 
@@ -205,6 +247,8 @@ class VirtualMachine:
 
                 if first is None:
                     return 'Error, variable used but not assigned'
+                if self.isInteger(result):
+                    first = int(first)
                 self.writeOnMemory(result, first)
 
             elif instruction.operator == operators['<']:
@@ -249,6 +293,11 @@ class VirtualMachine:
 
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
+                if not isinstance(first, bool):
+                    first = not first < 0
+                if not isinstance(second, bool):
+                    second = not second < 0
+
 
                 self.writeOnMemory(instruction.result, first and second)
 
@@ -264,6 +313,10 @@ class VirtualMachine:
 
                 if first is None or second is None:
                     return 'Error, variable used but not assigned'
+                if not isinstance(first, bool):
+                    first = not first < 0
+                if not isinstance(second, bool):
+                    second = not second < 0
 
                 self.writeOnMemory(instruction.result, first or second)
 
@@ -272,7 +325,6 @@ class VirtualMachine:
 
 
             elif instruction.operator == operators['gotoF']:
-
                 if self.isPointer(instruction.firstOperand): #contains array memory
                     first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
                 else :
@@ -338,6 +390,8 @@ class VirtualMachine:
                     return 'Error, variable used but not assigned'
 
                 self.writeOnNewMemory(instruction.result, first)
+                #print self.tempMemory.readFromMemory(instruction.result)
+                #print self.tempMemory.localIntF
 
             elif instruction.operator == operators['verify']:
                 if self.isPointer(instruction.firstOperand): #contains array memory
@@ -361,6 +415,16 @@ class VirtualMachine:
                     return 'Error, variable used but not assigned'
 
                 print(first)
+
+            elif instruction.operator == operators['input']:
+                first = (raw_input("Type value: \n"))
+
+                if first is None:
+                    return 'Not value typed'
+                if isinstance(first, basestring):
+                    return 'Typed value must be integer or double'
+
+                self.writeOnMemory(instruction.result, first)
 
             elif instruction.operator == operators['penUp']:
                 self.turtle.penup()
@@ -500,6 +564,12 @@ class VirtualMachine:
 
                 self.turtle.right(first)
 
+            elif instruction.operator == operators['beginFill']:
+                self.turtle.begin_fill()
+
+            elif instruction.operator == operators['endFill']:
+                self.turtle.end_fill()
+
             elif instruction.operator == operators['circle']:
                 if self.isPointer(instruction.firstOperand): #contains array memory
                     first = self.readFromMemory(self.readFromMemory(instruction.firstOperand.split('&')[1]))
@@ -527,8 +597,10 @@ class VirtualMachine:
                 self.writeOnPreviousMemory(result, first)
 
                 #release memory
-                self.mStack.pop()
+                self.releaseMemory()
 
             self.pc += 1
+
+        self.turtle.getscreen().getcanvas().postscript(file="drawing.eps")
 
         return 'Process completed successfully'
